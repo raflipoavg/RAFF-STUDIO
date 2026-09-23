@@ -1,0 +1,2742 @@
+<!DOCTYPE html>
+<html lang="ms" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAFF AI STORY & ANIMATION STUDIO V2 (STABLE PATCH)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                        }
+                    }
+                }
+            }
+        }
+
+        window.SUB_GENRES_MAP = window.SUB_GENRES_MAP || {
+            romance: ["Sweet Romance", "Romantic Comedy", "Slow Burn", "Forbidden Love", "Emotional Romance", "Relationship Drama"],
+            drama: ["Family Drama", "Social Drama", "Workplace Drama", "Relationship Drama", "Emotional Drama", "Crime Drama"],
+            comedy: ["Situational Comedy", "Romantic Comedy", "Slapstick", "Dark Comedy", "Satirical Comedy", "Comedy Drama"],
+            action: ["Martial Arts", "Military", "Spy", "Crime Action", "Street Action", "Survival Action"],
+            adventure: ["Treasure Hunt", "Exploration", "Expedition", "Quest", "Survival Adventure", "Fantasy Adventure"],
+            thriller: ["Psychological Thriller", "Crime Thriller", "Mystery Thriller", "Survival Thriller", "Conspiracy Thriller", "Tech Thriller"],
+            mystery: ["Detective Mystery", "Murder Mystery", "Investigation", "Missing Person", "Whodunit", "Supernatural Mystery"],
+            horror: ["Supernatural Horror", "Psychological Horror", "Ghost Story", "Survival Horror", "Folk Horror", "Creature Horror"],
+            crime: ["Detective", "Gangster", "Heist", "Underworld", "Investigation", "Police Crime"],
+            fantasy: ["High Fantasy", "Dark Fantasy", "Urban Fantasy", "Magical Adventure", "Mythological Fantasy", "Fairy Tale"],
+            sci_fi: ["Space", "Cyberpunk", "AI", "Time Travel", "Dystopian", "Future Technology"],
+            historical: ["Historical Drama", "War", "Period Romance", "Royal Court", "Historical Adventure", "Biographical"],
+            family: ["Family Drama", "Family Comedy", "Parent & Child", "Sibling Story", "Family Conflict", "Family Reunion"],
+            slice_of_life: ["Daily Life", "Workplace", "School Life", "Village Life", "City Life", "Friendship"],
+            coming_of_age: ["School", "Teen Romance", "Friendship", "Self Discovery", "Family", "Life Transition"],
+            psychological: ["Psychological Drama", "Psychological Thriller", "Identity", "Memory", "Obsession", "Mind Games"],
+            survival: ["Wilderness", "Disaster", "Island", "Post-Apocalyptic", "Escape", "Survival Thriller"],
+            documentary: ["Human Story", "History", "Travel", "Nature", "Culture", "Investigation"],
+            inspirational: ["Personal Growth", "Success", "Overcoming Challenges", "Friendship", "Family", "Life Lesson"],
+            musical: ["Song Lyrics Beat", "Musical Drama", "Musical Romance", "Music Video", "Stage Performance", "Concert Story"],
+            custom: ["Custom Sub-Genre"]
+        };
+
+        window.ORIGIN_SUB_MAP = window.ORIGIN_SUB_MAP || {
+            "Malaysia": ["Malaysia — Melayu", "Malaysia — Chinese", "Malaysia — Indian", "Malaysia — Sabah (General)", "Malaysia — Sabah (Kadazan-Dusun)", "Malaysia — Sabah (Bajau)", "Malaysia — Sabah (Murut)", "Malaysia — Sabah (Suluk)", "Malaysia — Sabah (Rungus)", "Malaysia — Sarawak (Iban)", "Malaysia — Sarawak (Bidayuh)", "Malaysia — Sarawak (Melanau)", "Malaysia — Sarawak (Orang Ulu)", "Malaysia — Orang Asli", "Malaysia — Mixed / Campuran", "Malaysia — Other"],
+            "Warga Asing": ["Indonesian", "Thai", "Filipino", "Singaporean", "Bruneian", "Vietnamese", "Korean", "Japanese", "Chinese — Mainland China", "Taiwanese", "Hong Kong", "Indian — India", "Pakistani", "Bangladeshi", "Nepalese", "Myanmar", "Australian", "British", "American", "European", "Middle Eastern", "African", "Other"]
+        };
+
+        window.projectState = window.projectState || {
+            contentType: "film_drama",
+            genre: "adventure",
+            subGenre: "Exploration",
+            customGenre: "",
+            autoSubGenre: false,
+            title: "",
+            logline: "",
+            durationMode: "auto",
+            duration: 0,
+            totalScenes: 0,
+            aspectRatio: "9:16",
+            style: "Strictly Photorealistic 1080p HD live-action cinema film still, professional cinematography, 35mm film grain, real human actor, real fabric texture, zero illustration, zero cartoon, zero animation",
+            language: "Bahasa Melayu",
+            characters: [],
+            outfits: [],
+            locations: [],
+            dialogues: [],
+            scriptText: "",
+            storyAnalysisData: null,
+            storyboardData: {},
+            settings: { apiKey: "" },
+            autoRecommend: {
+                characters: true,
+                outfits: true,
+                locations: true
+            }
+        };
+
+        window.onOriginCatChange = function() {
+            const catSel = document.getElementById('aiCharOriginCat');
+            const subSel = document.getElementById('aiCharOriginSub');
+            const customWrap = document.getElementById('aiCharCustomOriginWrapper'); // Gracefully handled if null
+            if (!catSel || !subSel) return;
+
+            const val = catSel.value;
+            if (val === 'Custom') {
+                if (customWrap) customWrap.classList.remove('hidden');
+                subSel.innerHTML = '<option value="Custom">Custom</option>';
+            } else {
+                if (customWrap) customWrap.classList.add('hidden');
+                const subs = window.ORIGIN_SUB_MAP[val] || ["General"];
+                subSel.innerHTML = subs.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+            }
+        };
+
+        window.onModalOriginCatChange = function() {
+            const catSel = document.getElementById('charModalOriginCat');
+            const subSel = document.getElementById('charModalOriginSub');
+            const customWrap = document.getElementById('charModalCustomOriginWrapper'); // Gracefully handled if null
+            if (!catSel || !subSel) return;
+
+            const val = catSel.value;
+            if (val === 'Custom') {
+                if (customWrap) customWrap.classList.remove('hidden');
+                subSel.innerHTML = '<option value="Custom">Custom</option>';
+            } else {
+                if (customWrap) customWrap.classList.add('hidden');
+                const subs = window.ORIGIN_SUB_MAP[val] || ["General"];
+                subSel.innerHTML = subs.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col overflow-hidden">
+
+<header class="bg-slate-900 border-b border-slate-800 h-14 px-4 flex items-center justify-between shrink-0 z-50">
+    <div class="flex items-center space-x-3">
+        <div class="bg-gradient-to-r from-violet-600 to-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-violet-900/30">
+            <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+        </div>
+        <div>
+            <h1 class="font-bold text-xs sm:text-sm bg-gradient-to-r from-violet-400 to-indigo-300 bg-clip-text text-transparent tracking-wide">RAFF AI STUDIO V2 (STABLE PATCH)</h1>
+            <p class="text-[10px] text-slate-400">Master Reference Studio V2 • Photorealistic Live-Action Engine (Max 10s Beats)</p>
+        </div>
+    </div>
+    
+    <div class="flex items-center space-x-2">
+        <span id="globalProcessingIndicator" class="hidden text-[10px] text-violet-300 bg-violet-950/80 border border-violet-800/60 px-2 py-1 rounded-md items-center gap-1.5 font-medium animate-pulse">
+            <i class="fa-solid fa-spinner fa-spin text-[10px]"></i> <span id="globalProcessingText">AI Processing</span>
+        </span>
+        <span id="autoSaveStatus" class="hidden sm:inline-flex text-[10px] text-emerald-400 bg-emerald-950/50 border border-emerald-800/60 px-2 py-1 rounded-md items-center gap-1.5 font-medium">
+            <i class="fa-solid fa-circle text-[6px]"></i> Auto-Saved
+        </span>
+        <button onclick="window.newProject()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-lg transition flex items-center gap-1.5 cursor-pointer border border-slate-700" title="New Project">
+            <i class="fa-solid fa-file text-violet-400"></i> <span class="hidden sm:inline">New</span>
+        </button>
+        <button onclick="window.openSettingsModal()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-lg transition flex items-center gap-1.5 cursor-pointer border border-slate-700" title="Settings">
+            <i class="fa-solid fa-gear text-violet-400"></i> <span class="hidden sm:inline">Settings</span>
+        </button>
+    </div>
+</header>
+
+<main class="flex-grow grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+    <section class="lg:col-span-5 bg-slate-900/60 border-r border-slate-800 flex flex-col h-full overflow-y-auto p-4 space-y-4">
+        
+        <!-- STEP 1: Content Type, Premise & AI Analysis Idea Cerita -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-xl space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-violet-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-lightbulb"></i> Step 1 — Content Type, Premise & Analisis Idea
+                </h2>
+                <span class="text-[9px] bg-violet-950 text-violet-300 border border-violet-800 px-2 py-0.5 rounded font-bold">Step 1</span>
+            </div>
+
+            <div class="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
+                <button onclick="window.toggleAdvanceSetting()" type="button" class="w-full px-3 py-2 bg-slate-900/80 hover:bg-slate-900 text-violet-300 text-xs font-bold flex items-center justify-between cursor-pointer transition">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-sliders text-violet-400"></i> Advance Setting (Auto Recommendations & Duration)</span>
+                    <i id="advanceSettingChevron" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+                </button>
+                <div id="advanceSettingContent" class="hidden p-3 space-y-3 text-xs border-t border-slate-800">
+                    <div class="space-y-1.5">
+                        <div class="text-[10px] text-slate-400">Tanda elemen yang ingin dicadangkan secara automatik oleh AI semasa analisis idea cerita:</div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer bg-slate-900 p-2 rounded-lg border border-slate-800">
+                                <input type="checkbox" id="chkAutoChar" checked onchange="window.updateAutoRecommendState()" class="rounded bg-slate-950 border-slate-800 text-violet-600 focus:ring-0"> Karakter
+                            </label>
+                            <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer bg-slate-900 p-2 rounded-lg border border-slate-800">
+                                <input type="checkbox" id="chkAutoOutfit" checked onchange="window.updateAutoRecommendState()" class="rounded bg-slate-950 border-slate-800 text-violet-600 focus:ring-0"> Pakaian
+                            </label>
+                            <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer bg-slate-900 p-2 rounded-lg border border-slate-800">
+                                <input type="checkbox" id="chkAutoLoc" checked onchange="window.updateAutoRecommendState()" class="rounded bg-slate-950 border-slate-800 text-violet-600 focus:ring-0"> Lokasi
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-900">
+                        <div>
+                            <label class="block text-slate-400 mb-0.5 text-[10px]">🌍 Default Origin:</label>
+                            <select id="aiCharOriginCat" onchange="window.onOriginCatChange()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs outline-none focus:border-violet-500 text-violet-300 font-medium">
+                                <option value="Malaysia" selected>🇲🇾 Malaysia</option>
+                                <option value="Warga Asing">🌏 Warga Asing</option>
+                                <option value="Custom">Custom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-0.5 text-[10px]">Subcategory:</label>
+                            <select id="aiCharOriginSub" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs outline-none focus:border-violet-500 text-violet-300 font-medium"></select>
+                        </div>
+                    </div>
+
+                    <!-- DYNAMIC DURATION & SCENE COUNT CONTROLS -->
+                    <div class="pt-2 border-t border-slate-900 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-violet-400 flex items-center gap-1">
+                                <i class="fa-solid fa-clock"></i> Dynamic Duration & Scene Count
+                            </span>
+                            <span class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800/80 px-2 py-0.5 rounded font-mono font-bold">Max 10s Cap</span>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
+                            <span class="text-[10px] text-slate-400 font-medium">Total Calculated Duration:</span>
+                            <span id="calculatedTotalDurationText" class="font-bold text-violet-300 text-xs">0 saat (0 scene)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-slate-400 mb-0.5 text-[10px]">Duration Mode:</label>
+                                <select id="storyDuration" onchange="window.onDurationChange()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs outline-none focus:border-violet-500 font-medium text-violet-300">
+                                    <option value="auto" selected>✨ Auto (Optimized 4-10s Beats)</option>
+                                    <option value="4">4s Target (Short Beat)</option>
+                                    <option value="6">6s Target (Action Beat)</option>
+                                    <option value="8">8s Target (Standard Beat)</option>
+                                    <option value="10">10s Target (Max Hard Cap)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-0.5 text-[10px]">Aspect Ratio:</label>
+                                <select id="storyAspectRatio" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 text-xs outline-none focus:border-violet-500 font-medium text-violet-300">
+                                    <option value="9:16" selected>9:16 (Vertical)</option>
+                                    <option value="16:9">16:9 (Widescreen)</option>
+                                    <option value="1:1">1:1 (Square)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="storyGenreModule" class="space-y-2.5 pt-1">
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1 text-xs">Genre:</label>
+                    <select id="storyGenreSelect" onchange="window.onGenreChange()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs outline-none focus:border-violet-500 font-medium">
+                        <option value="drama">Drama</option>
+                        <option value="romance">Romance</option>
+                        <option value="comedy">Comedy</option>
+                        <option value="action">Action</option>
+                        <option value="adventure" selected>Adventure</option>
+                        <option value="thriller">Thriller</option>
+                        <option value="mystery">Mystery</option>
+                        <option value="horror">Horror</option>
+                        <option value="crime">Crime</option>
+                        <option value="fantasy">Fantasy</option>
+                        <option value="sci_fi">Sci-Fi</option>
+                        <option value="historical">Historical</option>
+                        <option value="family">Family</option>
+                        <option value="slice_of_life">Slice of Life</option>
+                        <option value="coming_of_age">Coming-of-Age</option>
+                        <option value="psychological">Psychological</option>
+                        <option value="survival">Survival</option>
+                        <option value="documentary">Documentary</option>
+                        <option value="inspirational">Inspirational</option>
+                        <option value="musical">Musical / Music Video</option>
+                        <option value="custom">Custom Genre</option>
+                    </select>
+                </div>
+
+                <div id="customGenreWrapper" class="hidden">
+                    <label class="block font-medium text-slate-300 mb-1 text-xs">Custom Genre Name:</label>
+                    <input type="text" id="customGenreInput" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs outline-none focus:border-violet-500 font-medium" placeholder="Cth: Malay Folklore">
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="font-medium text-slate-300 text-xs">Sub-Genre:</label>
+                        <label class="text-[10px] text-violet-400 flex items-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="autoSubGenreCheck" class="rounded bg-slate-950 border-slate-800 text-violet-600 focus:ring-0"> Auto-select Sub-Genre
+                        </label>
+                    </div>
+                    <select id="subGenreSelect" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs outline-none focus:border-violet-500 font-medium"></select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-medium text-slate-300 mb-1 text-xs">Idea Cerita / Premis:</label>
+                <div class="flex flex-col gap-2">
+                    <textarea id="storyIdeaInput" rows="3" oninput="projectState.logline = this.value; window.saveProjectToLocalStorage();" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs outline-none focus:border-violet-500 transition resize-none font-medium" placeholder="Masukkan premis cerita, sinopsis, atau lirik lagu di sini untuk dikembangkan..."></textarea>
+                    
+                    <button onclick="window.analyzeStoryAndAutoDevelop()" id="analyzeStoryBtn" type="button" class="w-full py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold transition cursor-pointer shadow flex items-center justify-center gap-1.5" title="Analisis Idea Cerita">
+                        <i id="analyzeStoryIcon" class="fa-solid fa-wand-magic-sparkles"></i> 
+                        <span id="analyzeStoryBtnText">✨ Analisis Idea Cerita, Dialog & Beats (Max 10s)</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="aiStoryAnalysisDashboard" class="space-y-2.5 pt-1 hidden">
+                <div class="bg-slate-950 p-3 rounded-xl border border-violet-500/40 space-y-2 text-xs">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                        <span class="font-bold text-violet-300 flex items-center gap-1.5"><i class="fa-solid fa-brain text-violet-400"></i> AI Story Master Analysis</span>
+                        <span id="analysisStatusBadge" class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold">OPTIMIZED (≤10s)</span>
+                    </div>
+                    <div id="aiAnalysisSummaryText" class="text-slate-300 text-[11px] space-y-1"></div>
+                    <div class="pt-1 flex flex-wrap gap-1.5">
+                        <button onclick="window.openStoryAnalysisModal()" class="px-2.5 py-1 bg-violet-600 hover:bg-violet-700 text-white rounded font-bold text-[10px] shadow cursor-pointer"><i class="fa-solid fa-list-check mr-1"></i> View Story Beats, Dialogues & Requirements</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Characters Sheet Studio & Auto Composite Studio V2 (Lock 2.0) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-xl space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-violet-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-users"></i> Step 3 — Characters Studio & Auto Composite V2
+                </h2>
+                <button onclick="window.openCharacterModal()" class="px-2.5 py-1 bg-violet-600 hover:bg-violet-700 text-white rounded text-[10px] font-bold transition cursor-pointer shadow">+ Add Character</button>
+            </div>
+
+            <div id="characterRecommendationsContainer" class="space-y-2 text-xs"></div>
+        </div>
+
+        <!-- STEP 4: Outfits Sheet Studio -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-xl space-y-2.5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-shirt"></i> Step 4 — Outfits Studio & Master Sheets
+                </h2>
+                <button onclick="window.openOutfitModal()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold transition cursor-pointer shadow">+ Add Outfit</button>
+            </div>
+            <div id="outfitRecommendationsContainer" class="space-y-2 text-xs"></div>
+        </div>
+
+        <!-- STEP 5: Locations Sheet Studio -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 shadow-xl space-y-2.5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-earth-americas"></i> Step 5 — Locations Studio & Master Sheets
+                </h2>
+                <button onclick="window.openLocationModal()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition cursor-pointer shadow">+ Add Location</button>
+            </div>
+            <div id="locationRecommendationsContainer" class="space-y-2 text-xs"></div>
+        </div>
+
+        <!-- STEP 6: SYNC SCENE CARDS FROM UNIFIED STORY -->
+        <div class="pt-2 pb-4 space-y-2">
+            <button onclick="window.generateStoryDirector()" id="generateStoryBtn" class="w-full py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-xl transition flex items-center justify-center gap-2 cursor-pointer text-xs">
+                <i id="generateStoryIcon" class="fa-solid fa-layer-group text-sm"></i> <span id="generateStoryBtnText">STEP 6 — SYNC 1:1 SCENE CARDS & DIALOGUES (Max 10s)</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- RIGHT MAIN CONTENT: Persistent Scene Card Container -->
+    <section class="lg:col-span-7 bg-slate-950 flex flex-col h-full overflow-y-auto p-4 space-y-4">
+        <div class="space-y-4 flex flex-col h-full">
+            <!-- Persistent Scene Cards Container -->
+            <div id="persistentStoryboardContainer" class="space-y-4 flex-grow overflow-y-auto pr-1"></div>
+        </div>
+    </section>
+</main>
+
+<!-- STORY ANALYSIS DETAILS MODAL -->
+<div id="storyAnalysisModal" class="fixed inset-0 z-[80] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+            <h3 class="font-bold text-sm text-violet-400 flex items-center gap-2">
+                <i class="fa-solid fa-brain"></i> AI Story Master Analysis, 1:1 Beats & Dialogues (Optimized Max 10s)
+            </h3>
+            <button onclick="window.closeStoryAnalysisModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="storyAnalysisModalBody" class="space-y-4 text-xs overflow-y-auto pr-2 flex-grow text-slate-300"></div>
+        <div class="pt-3 border-t border-slate-800 flex justify-end shrink-0">
+            <button onclick="window.closeStoryAnalysisModal()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- CHARACTER MASTER SHEET & AUTO COMPOSITE STUDIO V2 MODAL -->
+<div id="characterModal" class="fixed inset-0 z-[70] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-6 space-y-4 shadow-2xl relative max-h-[92vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+            <h3 class="font-bold text-sm text-violet-400 flex items-center gap-2">
+                <i class="fa-solid fa-user-shield"></i> Character Master Sheet & Auto Composite Studio V2 (Lock 2.0)
+            </h3>
+            <button onclick="window.closeCharacterModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="space-y-4 text-xs overflow-y-auto pr-2 flex-grow">
+            <input type="hidden" id="editCharIndex" value="-1">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <!-- 1. CHARACTER ABSOLUTE REFERENCE UPLOAD -->
+                <div class="space-y-3">
+                    <label class="block font-bold text-violet-300 text-xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-user"></i> 1. Character Absolute Reference (Face, Hair, Body)
+                    </label>
+                    <div class="h-36 border-2 border-violet-500/40 border-dashed rounded-lg bg-slate-900 flex items-center justify-center relative overflow-hidden group cursor-pointer" onclick="document.getElementById('charFileImgInput').click()">
+                        <img id="charModalImgPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <div id="charModalImgPlaceholder" class="text-center p-2">
+                            <i class="fa-solid fa-cloud-arrow-up text-violet-400 text-xl mb-1"></i>
+                            <p class="text-[10px] text-slate-400 font-medium">Upload Character Photo / Drop Image</p>
+                            <span class="text-[9px] text-violet-400">JPG / PNG / WEBP (Face Lock 100%)</span>
+                        </div>
+                        <input type="file" id="charFileImgInput" accept="image/*" class="sr-only" onchange="window.handleCharImageUpload(event)">
+                    </div>
+                </div>
+
+                <!-- 2. OUTFIT ABSOLUTE REFERENCE UPLOAD -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block font-bold text-indigo-300 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-shirt"></i> 2. Outfit Absolute Reference (Clothing Only)
+                        </label>
+                    </div>
+                    <div class="h-36 border-2 border-indigo-500/40 border-dashed rounded-lg bg-slate-900 flex items-center justify-center relative overflow-hidden group cursor-pointer" onclick="document.getElementById('charModalOutfitUploadInput').click()">
+                        <img id="charModalOutfitImgPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <div id="charModalOutfitImgPlaceholder" class="text-center p-2">
+                            <i class="fa-solid fa-cloud-arrow-up text-indigo-400 text-xl mb-1"></i>
+                            <p class="text-[10px] text-slate-400 font-medium">Upload Outfit Photo / Drop Image</p>
+                            <span class="text-[9px] text-indigo-400">Clothing Only (Wajah diabaikan 100%)</span>
+                        </div>
+                        <input type="file" id="charModalOutfitUploadInput" accept="image/*" class="sr-only" onchange="window.handleModalCharOutfitUpload(event)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUTO COMPOSITE GENERATE BUTTON -->
+            <div class="bg-gradient-to-r from-violet-950/80 to-indigo-950/80 p-4 rounded-xl border border-violet-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div>
+                    <h4 class="font-bold text-violet-200 text-xs">✨ Auto Composite Studio V2 (Lock 2.0)</h4>
+                    <p class="text-[10px] text-slate-300">AI menggabungkan identiti mutlak karakter + pakaian rujukan (tanpa mengambil wajah pakaian) menjadi 1 imej full-body character master sheet.</p>
+                </div>
+                <button type="button" id="autoCompositeBtn" onclick="window.generateAutoCompositeCharacterSheet()" class="px-5 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-xl transition cursor-pointer shrink-0 flex items-center gap-2">
+                    <i id="autoCompositeIcon" class="fa-solid fa-wand-magic-sparkles text-sm"></i> <span id="autoCompositeBtnText">GENERATE CHARACTER SHEET</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Character ID:</label>
+                            <input type="text" id="charIdField" readonly class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none font-mono text-violet-400" value="CHAR-001">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Character Name:</label>
+                            <input type="text" id="charName" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 font-medium" placeholder="Cth: Amir">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Story Role:</label>
+                            <select id="charStoryRole" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 font-medium">
+                                <option value="Main Character" selected>Main Character</option>
+                                <option value="Supporting Character">Supporting Character</option>
+                                <option value="Villain">Villain</option>
+                                <option value="Mentor">Mentor</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Apparent Age:</label>
+                            <input type="text" id="charAge" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 font-medium" placeholder="30 years old">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">🌍 Origin / Background:</label>
+                            <select id="charModalOriginCat" onchange="window.onModalOriginCatChange()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 text-violet-300 font-medium">
+                                <option value="Malaysia" selected>🇲🇾 Malaysia</option>
+                                <option value="Warga Asing">🌏 Warga Asing</option>
+                                <option value="Custom">Custom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Subcategory:</label>
+                            <select id="charModalOriginSub" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 text-violet-300 font-medium"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Short Bio / Backstory:</label>
+                        <textarea id="charBio" rows="2" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 resize-none font-medium" placeholder="Penerangan ringkas latar belakang karakter..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-400 mb-0.5">Face & Features:</label>
+                            <input type="text" id="charFace" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 outline-none font-medium" placeholder="Serious mature face">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 mb-0.5">Hair Style & Color:</label>
+                            <input type="text" id="charHair" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 outline-none font-medium" placeholder="Short black hair">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-0.5">Clothing Description:</label>
+                        <input type="text" id="charClothing" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-1.5 outline-none font-medium" placeholder="Travel jacket, casual shirt">
+                    </div>
+                </div>
+            </div>
+
+            <div id="charMasterSheetDisplayBox" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 hidden">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span class="font-bold text-violet-300 text-xs flex items-center gap-1.5"><i class="fa-solid fa-id-card"></i> Auto Composite Character Master Sheet (Lock 2.0)</span>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="window.openFullScreenImage(document.getElementById('charMasterSheetImg').src, 'Character Master Sheet')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-violet-300 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-eye"></i> View</button>
+                        <button type="button" onclick="window.downloadMasterSheetImage('character')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-download"></i> Download</button>
+                    </div>
+                </div>
+                <div class="aspect-[16/9] w-full bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800 relative">
+                    <img id="charMasterSheetImg" src="" class="max-h-full max-w-full object-contain" alt="Character Master Sheet">
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeCharacterModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold cursor-pointer">Batal</button>
+            <button onclick="window.saveCharacter()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow">Simpan & Lock Master Sheet</button>
+        </div>
+    </div>
+</div>
+
+<!-- OUTFIT MASTER SHEET MODAL -->
+<div id="outfitModal" class="fixed inset-0 z-[70] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl relative max-h-[92vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+            <h3 class="font-bold text-sm text-indigo-400 flex items-center gap-2">
+                <i class="fa-solid fa-shirt"></i> Outfit Master Sheet & Studio V2 (Photoreal)
+            </h3>
+            <button onclick="window.closeOutfitModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="space-y-4 text-xs overflow-y-auto pr-2 flex-grow">
+            <input type="hidden" id="outfitEditIndex" value="-1">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="block font-bold text-indigo-300">Outfit Reference Image:</label>
+                        <button type="button" onclick="window.openUseCharacterAsOutfitModal()" class="px-2 py-1 bg-violet-950 hover:bg-violet-900 text-violet-300 border border-violet-800 rounded text-[10px] font-bold transition flex items-center gap-1 cursor-pointer" title="Guna Imej Karakter Sebagai Pakaian">
+                            <i class="fa-solid fa-user-tag"></i> Guna Imej Karakter
+                        </button>
+                    </div>
+                    <div class="h-36 border-2 border-indigo-500/40 border-dashed rounded-lg bg-slate-900 flex items-center justify-center relative overflow-hidden group cursor-pointer" onclick="document.getElementById('outfitFileImgInput').click()">
+                        <img id="outfitModalImgPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <div id="outfitModalImgPlaceholder" class="text-center p-2">
+                            <i class="fa-solid fa-cloud-arrow-up text-indigo-400 text-xl mb-1"></i>
+                            <p class="text-[10px] text-slate-400 font-medium">Upload Outfit / Drop Image</p>
+                            <span class="text-[9px] text-indigo-400">Clothing Only (Wajah diabaikan)</span>
+                        </div>
+                        <input type="file" id="outfitFileImgInput" accept="image/*" class="sr-only" onchange="window.handleOutfitImageUpload(event)">
+                    </div>
+                    <div>
+                        <button type="button" onclick="window.generateOutfitImageFor(document.getElementById('outfitIdField').value)" id="aiGenOutfitSheetImgBtn" class="w-full py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg">
+                            <i id="aiGenOutfitSheetIcon" class="fa-solid fa-image"></i> <span id="aiGenOutfitSheetBtnText">Generate Outfit Sheet (Photoreal)</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="md:col-span-2 space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Outfit ID:</label>
+                            <input type="text" id="outfitIdField" readonly class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none font-mono text-indigo-400" value="OUTFIT-001">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Outfit Name:</label>
+                            <input type="text" id="outfitName" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-indigo-500 font-medium" placeholder="Cth: Travel Jacket">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Assigned Character:</label>
+                        <select id="outfitAssignedChar" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-indigo-500 font-medium"></select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Full Clothing Description:</label>
+                        <textarea id="outfitDesc" rows="2" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-indigo-500 resize-none font-medium" placeholder="Penerangan terperinci pakaian..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Default Empty Image Preview Box as requested -->
+            <div id="outfitMasterSheetDisplayBox" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span class="font-bold text-indigo-300 text-xs flex items-center gap-1.5"><i class="fa-solid fa-shirt"></i> HD Outfit Master Sheet</span>
+                    <div id="outfitSheetActionBtns" class="flex items-center gap-1.5 hidden">
+                        <button type="button" onclick="window.openFullScreenImage(document.getElementById('outfitMasterSheetImg').src, 'Outfit Master Sheet')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-eye"></i> View</button>
+                        <button type="button" onclick="window.downloadMasterSheetImage('outfit')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-download"></i> Download</button>
+                    </div>
+                </div>
+                <div class="aspect-[16/9] w-full bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800 relative">
+                    <img id="outfitMasterSheetImg" src="" class="max-h-full max-w-full object-contain hidden" alt="Outfit Master Sheet">
+                    <div id="outfitMasterSheetPlaceholder" class="text-center p-4 space-y-2">
+                        <i class="fa-solid fa-image text-3xl text-slate-700"></i>
+                        <p class="text-[11px] text-slate-500 font-medium">Kotak Imej Kosong (Default Outfit Sheet)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeOutfitModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold cursor-pointer">Batal</button>
+            <button onclick="window.saveOutfit()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow">Simpan & Lock Outfit Sheet</button>
+        </div>
+    </div>
+</div>
+
+<!-- USE CHARACTER AS OUTFIT PICKER MODAL -->
+<div id="useCharAsOutfitModal" class="fixed inset-0 z-[80] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-bold text-sm text-violet-400 flex items-center gap-2">
+                <i class="fa-solid fa-user-tag"></i> Pilih Karakter Sebagai Rujukan Pakaian
+            </h3>
+            <button onclick="window.closeUseCharacterAsOutfitModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="space-y-3 text-xs">
+            <p class="text-slate-400">Pilih karakter dari library untuk menggunakan imej rujukan karakternya sebagai rujukan pakaian:</p>
+            <div id="useCharAsOutfitList" class="space-y-2 max-h-60 overflow-y-auto"></div>
+        </div>
+        <div class="pt-3 border-t border-slate-800 flex justify-end">
+            <button onclick="window.closeUseCharacterAsOutfitModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold cursor-pointer">Batal</button>
+        </div>
+    </div>
+</div>
+
+<!-- LOCATION MASTER SHEET MODAL -->
+<div id="locationModal" class="fixed inset-0 z-[70] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl relative max-h-[92vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+            <h3 class="font-bold text-sm text-emerald-400 flex items-center gap-2">
+                <i class="fa-solid fa-earth-americas"></i> Location Master Sheet & Studio V2 (Photoreal)
+            </h3>
+            <button onclick="window.closeLocationModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="space-y-4 text-xs overflow-y-auto pr-2 flex-grow">
+            <input type="hidden" id="locEditIndex" value="-1">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                <div class="space-y-3">
+                    <label class="block font-bold text-emerald-300">Location Reference Image:</label>
+                    <div class="h-36 border-2 border-emerald-500/40 border-dashed rounded-lg bg-slate-900 flex items-center justify-center relative overflow-hidden group cursor-pointer" onclick="document.getElementById('locFileImgInput').click()">
+                        <img id="locModalImgPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <div id="locModalImgPlaceholder" class="text-center p-2">
+                            <i class="fa-solid fa-cloud-arrow-up text-emerald-400 text-xl mb-1"></i>
+                            <p class="text-[10px] text-slate-400 font-medium">Upload Location / Drop Image</p>
+                            <span class="text-[9px] text-emerald-400">JPG / PNG / WEBP (Uninhabited)</span>
+                        </div>
+                        <input type="file" id="locFileImgInput" accept="image/*" class="sr-only" onchange="window.handleLocationImageUpload(event)">
+                    </div>
+                    <div>
+                        <button type="button" onclick="window.generateMasterLocationSheetImage()" id="aiGenLocSheetImgBtn" class="w-full py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-lg font-bold text-[10px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-lg">
+                            <i id="aiGenLocSheetIcon" class="fa-solid fa-image"></i> <span id="aiGenLocSheetBtnText">Generate Sheet (Photoreal)</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="md:col-span-2 space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Location ID:</label>
+                            <input type="text" id="locIdField" readonly class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none font-mono text-emerald-400" value="LOC-001">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Location Name:</label>
+                            <input type="text" id="locName" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-emerald-500 font-medium" placeholder="Cth: Rumah Lama Kampung">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Location Type:</label>
+                            <input type="text" id="locType" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-emerald-500 font-medium" placeholder="Outdoor / Indoor">
+                        </div>
+                        <div>
+                            <label class="block font-medium text-slate-300 mb-1">Lighting / Atmosphere:</label>
+                            <input type="text" id="locLighting" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-emerald-500 font-medium" placeholder="Sunset / Warm lighting">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Detailed Description:</label>
+                        <textarea id="locDesc" rows="2" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none focus:border-emerald-500 resize-none font-medium" placeholder="Penerangan lokasi..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Default Empty Image Preview Box as requested -->
+            <div id="locMasterSheetDisplayBox" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span class="font-bold text-emerald-300 text-xs flex items-center gap-1.5"><i class="fa-solid fa-earth-americas"></i> HD Location Master Sheet</span>
+                    <div id="locSheetActionBtns" class="flex items-center gap-1.5 hidden">
+                        <button type="button" onclick="window.openFullScreenImage(document.getElementById('locMasterSheetImg').src, 'Location Master Sheet')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-eye"></i> View</button>
+                        <button type="button" onclick="window.downloadMasterSheetImage('location')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold"><i class="fa-solid fa-download"></i> Download</button>
+                    </div>
+                </div>
+                <div class="aspect-[16/9] w-full bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800 relative">
+                    <img id="locMasterSheetImg" src="" class="max-h-full max-w-full object-contain hidden" alt="Location Master Sheet">
+                    <div id="locMasterSheetPlaceholder" class="text-center p-4 space-y-2">
+                        <i class="fa-solid fa-image text-3xl text-slate-700"></i>
+                        <p class="text-[11px] text-slate-500 font-medium">Kotak Imej Kosong (Default Location Sheet)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeLocationModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold cursor-pointer">Batal</button>
+            <button onclick="window.saveLocation()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow">Simpan & Lock Location Sheet</button>
+        </div>
+    </div>
+</div>
+
+<!-- SCENE EDITOR MODAL -->
+<div id="sceneEditorModal" class="fixed inset-0 z-[70] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative max-h-[92vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+            <h3 class="font-bold text-sm text-violet-400 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square"></i> Scene Editor & Specific Frame Auto-Regeneration — <span id="modalSceneNumTitle">Scene 01</span>
+            </h3>
+            <button onclick="window.closeSceneEditor()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <input type="hidden" id="editSceneNumber" value="1">
+        <div class="space-y-3 text-xs overflow-y-auto pr-2 flex-grow">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Scene Title / Heading:</label>
+                    <input type="text" id="editSceneTitle" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 font-medium">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Duration (Max 10s):</label>
+                    <input type="text" id="editSceneDuration" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 font-medium">
+                </div>
+            </div>
+
+            <!-- MULTI-CHARACTER & OUTFIT VARIANTS ASSIGNMENT IN SCENE EDITOR -->
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
+                <div class="font-bold text-violet-300 text-[11px] flex items-center gap-1.5"><i class="fa-solid fa-id-card"></i> Karakter & Outfit Variant Assignments (Consistency Lock)</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-medium text-violet-300 mb-1">Karakter 1 ID:</label>
+                        <select id="editSceneChar1Select" onchange="window.onSceneEditorCharChange(1)" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none font-mono text-xs text-violet-300"></select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-indigo-300 mb-1">Outfit Karakter 1:</label>
+                        <select id="editSceneOutfit1Select" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none font-mono text-xs text-indigo-300"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-900">
+                    <div>
+                        <label class="block font-medium text-violet-300 mb-1">Karakter 2 ID (Optional):</label>
+                        <select id="editSceneChar2Select" onchange="window.onSceneEditorCharChange(2)" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none font-mono text-xs text-violet-300">
+                            <option value="">-- Tiada Karakter 2 --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-indigo-300 mb-1">Outfit Karakter 2:</label>
+                        <select id="editSceneOutfit2Select" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none font-mono text-xs text-indigo-300"></select>
+                    </div>
+                </div>
+                <div class="pt-1">
+                    <label class="block font-medium text-emerald-300 mb-1"><i class="fa-solid fa-earth-americas mr-1"></i> Location ID:</label>
+                    <select id="editSceneLocationSelect" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 outline-none font-mono text-emerald-300"></select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-medium text-slate-300 mb-1">Visual Beat / Moment (One Clear Visual Shot):</label>
+                <textarea id="editSceneVisual" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 font-mono text-[11px] resize-none"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Action (Primary Action):</label>
+                    <input type="text" id="editSceneAction" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 font-medium">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Camera Direction:</label>
+                    <input type="text" id="editSceneCamera" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 outline-none focus:border-violet-500 font-medium">
+                </div>
+            </div>
+        </div>
+        <div class="pt-3 border-t border-slate-800 flex justify-end gap-2 shrink-0">
+            <button onclick="window.closeSceneEditor()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold cursor-pointer">Batal</button>
+            <button onclick="window.saveAndRegenerateSceneChanges()" class="px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Simpan & Auto-Regenerate Frame Ini Sahaja
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- JSON PROMPT MODAL -->
+<div id="jsonPromptModal" class="fixed inset-0 z-[80] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl relative">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-bold text-sm text-violet-400 flex items-center gap-2">
+                <i class="fa-solid fa-code"></i> Scene JSON Prompt & Dialogue Eye-Line Lock (Max 10s)
+            </h3>
+            <button onclick="window.closeJsonPromptModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="space-y-3 text-xs">
+            <textarea id="jsonPromptTextarea" rows="10" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-[11px] text-violet-200 outline-none focus:border-violet-500 resize-y"></textarea>
+        </div>
+        <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+            <button onclick="window.closeJsonPromptModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold cursor-pointer">Tutup</button>
+            <button onclick="window.copyJsonPromptModalContent()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow flex items-center gap-1.5">
+                <i class="fa-solid fa-copy"></i> Salin JSON
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT SPESIFIKASI MODAL -->
+<div id="editSpecModal" class="fixed inset-0 z-[85] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-bold text-sm text-indigo-400 flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Edit Spesifikasi Scene <span id="specSceneNumTitle"></span>
+            </h3>
+            <button onclick="window.closeEditSpecModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <input type="hidden" id="editSpecSceneId" value="">
+        <div class="space-y-3 text-xs">
+            <label class="block font-medium text-slate-300 mb-1">Arahan Teks Khusus / Spesifikasi Visual Baru:</label>
+            <textarea id="editSpecTextarea" rows="4" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 outline-none focus:border-indigo-500 font-medium text-slate-200 resize-y" placeholder="Masukkan spesifikasi terperinci di sini..."></textarea>
+        </div>
+        <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
+            <button onclick="window.closeEditSpecModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs font-bold cursor-pointer">Batal</button>
+            <button onclick="window.saveAndRegenerateSpec()" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow flex items-center gap-1.5">
+                <i class="fa-solid fa-check"></i> Simpan & Regenerate Imej
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- FULLSCREEN IMAGE PREVIEW MODAL -->
+<div id="fullScreenImageModal" class="fixed inset-0 z-[90] hidden bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-4 flex flex-col items-center relative max-h-[92vh]">
+        <div class="w-full flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+            <h3 id="fullScreenTitle" class="font-bold text-sm text-violet-400 flex items-center gap-2">
+                <i class="fa-solid fa-image"></i> Scene Image Preview (Fullscreen HD)
+            </h3>
+            <button onclick="window.closeFullScreenImage()" class="text-slate-400 hover:text-white text-lg cursor-pointer px-2 py-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="relative w-full flex items-center justify-center bg-slate-950 rounded-xl overflow-hidden aspect-[9/16] max-h-[70vh]">
+            <img id="fullScreenImg" src="" alt="Scene Fullscreen" class="max-h-full max-w-full object-contain">
+        </div>
+        <div class="w-full pt-3 mt-3 border-t border-slate-800 flex items-center justify-between">
+            <span id="fullScreenSubtitle" class="text-xs text-slate-400">Scene Image Asset</span>
+            <div class="flex items-center gap-2">
+                <a id="fullScreenDownloadBtn" href="#" download="scene_image.png" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-download"></i> Download Asset
+                </a>
+                <button onclick="window.closeFullScreenImage()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold cursor-pointer">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" class="fixed inset-0 z-[70] hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 class="font-bold text-sm text-violet-400 flex items-center gap-2">
+                <i class="fa-solid fa-gear"></i> Settings & API Configuration
+            </h3>
+            <button onclick="window.closeSettingsModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="space-y-4 text-xs">
+            <div class="space-y-1.5">
+                <label class="block font-medium text-slate-300 mb-1">Google Gemini API Key:</label>
+                <input type="password" id="settingsApiKey" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 outline-none focus:border-violet-500 font-medium text-xs">
+                <p class="text-[10px] text-slate-500 mt-2">
+                    <i class="fa-solid fa-circle-info"></i> API Key disimpan dengan selamat secara lokal (localStorage) di dalam pelayar anda. Tidak diserahkan kepada mana-mana pelayan luaran melainkan Google.
+                </p>
+            </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 flex justify-end">
+            <button onclick="window.saveSettings()" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow">Simpan Tetapan</button>
+        </div>
+    </div>
+</div>
+
+<!-- CUSTOM CONFIRM MODAL -->
+<div id="customConfirmModal" class="fixed inset-0 z-[100] hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
+        <div class="flex items-center gap-3 text-rose-400 border-b border-slate-800 pb-3">
+            <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+            <h3 class="font-bold text-sm">Pengesahan</h3>
+        </div>
+        <p id="customConfirmMessage" class="text-xs text-slate-300 font-medium"></p>
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-800">
+            <button onclick="window.closeCustomConfirm()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold cursor-pointer">Batal</button>
+            <button id="customConfirmActionBtn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold cursor-pointer shadow">Ya, Pasti</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" class="fixed bottom-6 right-6 z-[100] transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 border border-slate-800 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-xs font-medium">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <span id="toastMessage">Berjaya dikemas kini!</span>
+</div>
+
+<script>
+    // NOTE: Client-side Gemini API key is suitable for personal/private deployment. 
+    // For public multi-user deployment, move Gemini calls to a Vercel serverless backend.
+
+    window.RAFF_DEBUG = false; // Set to true to view console debug logs
+    window.raffLog = function(...args) {
+        if (window.RAFF_DEBUG) console.log('[RAFF DEBUG]', ...args);
+    };
+
+    // Global Error Listeners for Vercel stability
+    window.addEventListener('error', function(e) {
+        window.raffLog('Global Execution Error:', e.message);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        window.raffLog('Unhandled Promise Rejection:', e.reason);
+    });
+
+    const SUB_GENRES_MAP = window.SUB_GENRES_MAP;
+    const ORIGIN_SUB_MAP = window.ORIGIN_SUB_MAP;
+    const projectState = window.projectState;
+
+    // --- CENTRALIZED API HELPERS FOR VERCEL COMPATIBILITY ---
+    window.callGeminiAPI = async function(model, partsArray, requestConfig = {}) {
+        const apiKey = projectState?.settings?.apiKey?.trim();
+        if (!apiKey) {
+            throw new Error("API_KEY_MISSING");
+        }
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        // Timeout management (120 seconds max per request)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); 
+
+        try {
+            const bodyPayload = {
+                contents: [{ role: 'user', parts: partsArray }]
+            };
+            if (requestConfig.generationConfig) {
+                bodyPayload.generationConfig = requestConfig.generationConfig;
+            }
+
+            window.raffLog(`Calling Gemini API (${model})...`);
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bodyPayload),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                let errorBody = {};
+                try { errorBody = await response.json(); } catch(e) {}
+                window.raffLog('API Error Response:', errorBody);
+                if (response.status === 401 || response.status === 403) throw new Error("API_KEY_INVALID");
+                if (response.status === 429) throw new Error("API_QUOTA_EXCEEDED");
+                throw new Error("API_SERVER_ERROR");
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') throw new Error("API_TIMEOUT");
+            throw error;
+        }
+    };
+
+    window.safeParseGeminiJSON = function(text) {
+        try {
+            let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+            return JSON.parse(clean);
+        } catch (e) {
+            window.raffLog('JSON Parse Error:', e);
+            throw new Error("JSON_PARSE_ERROR");
+        }
+    };
+
+    window.extractGeneratedImage = function(result) {
+        try {
+            const part = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+            if (part && part.inlineData) {
+                return 'data:' + part.inlineData.mimeType + ';base64,' + part.inlineData.data;
+            }
+            return null;
+        } catch (e) {
+            window.raffLog('Image Extraction Error:', e);
+            return null;
+        }
+    };
+
+    window.getFriendlyErrorMessage = function(error) {
+        const msg = error.message;
+        if (msg === "API_KEY_MISSING") return "Gemini API Key belum dimasukkan. Sila buka Settings.";
+        if (msg === "API_KEY_INVALID") return "API Key tidak sah atau akses API tidak dibenarkan.";
+        if (msg === "API_QUOTA_EXCEEDED") return "Had penggunaan Gemini telah dicapai. Sila cuba lagi kemudian.";
+        if (msg === "API_TIMEOUT") return "Permintaan AI mengambil masa terlalu lama (Timeout). Sila cuba semula.";
+        if (msg === "API_SERVER_ERROR") return "Pelayan Gemini sedang mengalami masalah. Sila cuba lagi.";
+        if (msg === "JSON_PARSE_ERROR") return "Gemini memberikan format respons JSON yang tidak lengkap/sah.";
+        if (msg === "NO_IMAGE_GENERATED") return "Gemini gagal menjana imej berdasarkan prompt yang diberikan.";
+        return "Ralat tidak dijangka atau tiada sambungan internet.";
+    };
+    
+    // --- CUSTOM CONFIRM MODAL (No Alert/Confirm Rules Compliant) ---
+    window.customConfirm = function(message, callback) {
+        const modal = document.getElementById('customConfirmModal');
+        const msgEl = document.getElementById('customConfirmMessage');
+        const btn = document.getElementById('customConfirmActionBtn');
+        if (!modal || !msgEl || !btn) return;
+
+        msgEl.innerText = message;
+        btn.onclick = function() {
+            window.closeCustomConfirm();
+            if(callback) callback();
+        };
+        modal.classList.remove('hidden');
+    };
+    
+    window.closeCustomConfirm = function() {
+        document.getElementById('customConfirmModal')?.classList.add('hidden');
+    };
+    // --------------------------------------------------------
+
+    window.toggleAdvanceSetting = function() {
+        const content = document.getElementById('advanceSettingContent');
+        const chevron = document.getElementById('advanceSettingChevron');
+        if (!content || !chevron) return;
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            chevron.classList.add('rotate-180');
+        } else {
+            content.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        }
+    };
+
+    window.updateAutoRecommendState = function() {
+        projectState.autoRecommend.characters = document.getElementById('chkAutoChar')?.checked ?? true;
+        projectState.autoRecommend.outfits = document.getElementById('chkAutoOutfit')?.checked ?? true;
+        projectState.autoRecommend.locations = document.getElementById('chkAutoLoc')?.checked ?? true;
+        window.saveProjectToLocalStorage();
+    };
+
+    window.calculateTotalDurationAndScenes = function() {
+        let keys = Object.keys(projectState.storyboardData || {});
+        let totalSec = 0;
+        keys.forEach(function(sId) {
+            let sc = projectState.storyboardData[sId];
+            if (sc && sc.duration) {
+                let parsed = parseInt(String(sc.duration).replace('s', '').trim());
+                if (!isNaN(parsed) && parsed > 0) {
+                    if (parsed > 10) parsed = 10;
+                    totalSec += parsed;
+                } else {
+                    totalSec += 6;
+                }
+            } else {
+                totalSec += 6;
+            }
+        });
+        projectState.totalScenes = keys.length;
+        projectState.duration = totalSec;
+
+        const durEl = document.getElementById('calculatedTotalDurationText');
+        if (durEl) {
+            durEl.innerText = totalSec + " saat (" + keys.length + " scene)";
+        }
+    };
+
+    window.onGenreChange = function() {
+        const genreSel = document.getElementById('storyGenreSelect');
+        const customWrap = document.getElementById('customGenreWrapper');
+        const subGenreSel = document.getElementById('subGenreSelect');
+        if (!genreSel || !subGenreSel) return;
+
+        const val = genreSel.value;
+        projectState.genre = val;
+
+        if (val === 'custom') {
+            if (customWrap) customWrap.classList.remove('hidden');
+            subGenreSel.innerHTML = '<option value="Custom">Custom Sub-Genre</option>';
+        } else {
+            if (customWrap) customWrap.classList.add('hidden');
+            const subs = SUB_GENRES_MAP[val] || ["General"];
+            subGenreSel.innerHTML = subs.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+            projectState.subGenre = subs[0];
+        }
+        window.saveProjectToLocalStorage();
+    };
+
+    window.onDurationChange = function() {
+        const durSel = document.getElementById('storyDuration');
+        if (!durSel) return;
+        projectState.durationMode = durSel.value;
+        window.calculateTotalDurationAndScenes();
+        window.renderAll();
+    };
+
+    window.setGlobalLoading = function(isLoading, text) {
+        const ind = document.getElementById('globalProcessingIndicator');
+        const txt = document.getElementById('globalProcessingText');
+        if (!ind || !txt) return;
+        if (isLoading) {
+            txt.innerText = text || "AI Processing";
+            ind.classList.remove('hidden');
+            ind.classList.add('inline-flex');
+        } else {
+            ind.classList.add('hidden');
+            ind.classList.remove('inline-flex');
+        }
+    };
+
+    window.setButtonLoading = function(btnId, iconId, textId, isLoading, loadingText, normalIconClass, normalText) {
+        const btn = document.getElementById(btnId);
+        const icon = document.getElementById(iconId);
+        const text = document.getElementById(textId);
+        if (!btn) return;
+        if (isLoading) {
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            if (icon) icon.className = "fa-solid fa-spinner fa-spin text-sm";
+            if (text) text.innerText = loadingText || "Processing...";
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            if (icon) icon.className = normalIconClass || "fa-solid fa-wand-magic-sparkles";
+            if (text) text.innerText = normalText || "Ready";
+        }
+    };
+
+    window.showToast = function(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        if (!toast || !toastMessage) return;
+        
+        toastMessage.innerText = msg;
+        
+        const iconHtml = isError 
+            ? '<i class="fa-solid fa-circle-exclamation text-rose-400 text-base"></i>' 
+            : '<i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>';
+            
+        if (isError) {
+            toast.classList.remove('border-slate-800', 'bg-slate-900');
+            toast.classList.add('border-rose-900', 'bg-rose-950');
+        } else {
+            toast.classList.remove('border-rose-900', 'bg-rose-950');
+            toast.classList.add('border-slate-800', 'bg-slate-900');
+        }
+        
+        toast.innerHTML = iconHtml + '<span id="toastMessage" class="flex-grow">' + msg + '</span>';
+
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        setTimeout(function() {
+            toast.classList.add('translate-y-20', 'opacity-0');
+        }, isError ? 5000 : 3000);
+    };
+
+    window.saveProjectToLocalStorage = function() {
+        try {
+            localStorage.setItem('raff_ai_animation_studio_state', JSON.stringify(projectState));
+            const status = document.getElementById('autoSaveStatus');
+            if (status) {
+                status.innerHTML = '<i class="fa-solid fa-circle text-[6px] text-emerald-400"></i> Auto-Saved';
+            }
+        } catch (e) {
+            window.raffLog("Storage warning:", e);
+        }
+    };
+
+    window.loadProjectFromLocalStorage = function() {
+        try {
+            const saved = localStorage.getItem('raff_ai_animation_studio_state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                Object.assign(projectState, parsed);
+                if (!projectState.outfits) projectState.outfits = [];
+                if (!projectState.locations) projectState.locations = [];
+                if (!projectState.characters) projectState.characters = [];
+                if (!projectState.dialogues) projectState.dialogues = [];
+                if (!projectState.storyboardData) projectState.storyboardData = {};
+                if (!projectState.autoRecommend) projectState.autoRecommend = { characters: true, outfits: true, locations: true };
+            }
+        } catch (e) {
+            window.raffLog("Load warning:", e);
+        }
+    };
+
+    window.newProject = function() {
+        window.customConfirm("Adakah anda pasti mahu memulakan projek baharu? Data yang tidak disimpan akan hilang.", function() {
+            localStorage.removeItem('raff_ai_animation_studio_state');
+            location.reload();
+        });
+    };
+
+    window.renderAll = function() {
+        window.calculateTotalDurationAndScenes();
+
+        const genreSel = document.getElementById('storyGenreSelect');
+        if (genreSel) {
+            genreSel.value = projectState.genre || 'adventure';
+            window.onGenreChange();
+            const subSel = document.getElementById('subGenreSelect');
+            if (subSel && projectState.subGenre) subSel.value = projectState.subGenre;
+        }
+
+        const durSel = document.getElementById('storyDuration');
+        if (durSel && projectState.durationMode) durSel.value = projectState.durationMode;
+
+        if (projectState.autoRecommend) {
+            const cBox = document.getElementById('chkAutoChar');
+            const oBox = document.getElementById('chkAutoOutfit');
+            const lBox = document.getElementById('chkAutoLoc');
+            if (cBox) cBox.checked = projectState.autoRecommend.characters;
+            if (oBox) oBox.checked = projectState.autoRecommend.outfits;
+            if (lBox) lBox.checked = projectState.autoRecommend.locations;
+        }
+
+        const dash = document.getElementById('aiStoryAnalysisDashboard');
+        const sumText = document.getElementById('aiAnalysisSummaryText');
+        if (projectState.storyAnalysisData && dash && sumText) {
+            const d = projectState.storyAnalysisData;
+            let beatsCount = (d.storyStructure && d.storyStructure.beats) ? d.storyStructure.beats.length : (d.storyBeats ? d.storyBeats.length : 0);
+            let reqsCount = d.sceneRequirements ? d.sceneRequirements.length : 0;
+            let dlgCount = projectState.dialogues ? projectState.dialogues.length : 0;
+            sumText.innerHTML = '<div><strong>Title:</strong> ' + (d.title || '-') + '</div>' +
+                '<div><strong>Logline:</strong> ' + (d.logline || '-') + '</div>' +
+                '<div><strong>Main Conflict:</strong> ' + (d.mainConflict || '-') + '</div>' +
+                '<div><strong>Optimized Beats (Max 10s):</strong> ' + beatsCount + ' | <strong>Scene Requirements:</strong> ' + reqsCount + ' | <span class="text-violet-300 font-bold">Dialogues Extracted: ' + dlgCount + '</span></div>';
+            dash.classList.remove('hidden');
+        }
+
+        const charRecContainer = document.getElementById('characterRecommendationsContainer');
+        if (charRecContainer) {
+            if (projectState.characters.length === 0) {
+                charRecContainer.innerHTML = '<div class="text-slate-500 text-[11px] italic">Tiada karakter dalam library. Sila tambah karakter.</div>';
+            } else {
+                charRecContainer.innerHTML = projectState.characters.map(function(c, idx) {
+                    let hasMaster = !!c.masterSheetImage;
+                    return '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5 text-xs">' +
+                        '<div class="flex items-center justify-between">' +
+                            '<span class="font-bold text-violet-300">' + c.name + ' (' + c.character_id + ') <span class="text-[9px] text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded font-mono">LOCKED 2.0</span></span>' +
+                            '<div class="flex items-center gap-1.5">' +
+                                '<button onclick="window.openCharacterModal(' + idx + ')" class="px-2 py-1 bg-violet-600 hover:bg-violet-700 text-white rounded text-[10px] font-bold shadow cursor-pointer" title="Edit"><i class="fa-solid fa-pen"></i> Edit</button>' +
+                                (hasMaster ? '<button onclick="window.openCharacterFullScreen(' + idx + ')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-violet-300 rounded text-[10px] font-bold shadow cursor-pointer" title="View"><i class="fa-solid fa-eye"></i> View</button>' : '') +
+                                '<button onclick="window.downloadCharacterSheetForIndex(' + idx + ')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] font-bold shadow cursor-pointer" title="Download"><i class="fa-solid fa-download"></i></button>' +
+                                '<button onclick="window.deleteCharacter(' + idx + ')" class="px-2 py-1 bg-rose-950 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold shadow cursor-pointer transition flex items-center gap-1" title="Padam"><i class="fa-solid fa-trash"></i></button>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="aspect-[16/9] w-full bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-800 relative">' +
+                            (hasMaster ? '<img src="' + c.masterSheetImage + '" class="max-h-full max-w-full object-contain">' : '<div class="text-slate-600 text-[10px] italic flex items-center gap-1"><i class="fa-solid fa-image"></i> Kotak Imej Kosong (Default)</div>') +
+                        '</div>' +
+                        '<div class="flex items-center justify-between pt-1">' +
+                            '<div class="text-[10px] text-slate-400 truncate"><strong>Role:</strong> ' + (c.role || '-') + ' | <strong>Face/Hair:</strong> ' + (c.face || '-') + '</div>' +
+                            '<button onclick="window.generateCharacterSheetForIndex(' + idx + ')" class="px-2.5 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded text-[10px] font-bold shadow cursor-pointer flex items-center gap-1 shrink-0">' +
+                                '<i class="fa-solid fa-image"></i> Generate Imej' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+
+        const outfitRecContainer = document.getElementById('outfitRecommendationsContainer');
+        if (outfitRecContainer) {
+            if (projectState.outfits.length === 0) {
+                outfitRecContainer.innerHTML = '<div class="text-slate-500 text-[11px] italic">Tiada outfit dalam library. Sila tambah outfit.</div>';
+            } else {
+                outfitRecContainer.innerHTML = projectState.outfits.map(function(o, idx) {
+                    let hasImg = !!o.masterSheetImage;
+                    return '<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2 text-xs">' +
+                        '<div class="flex items-center justify-between">' +
+                            '<span class="font-bold text-indigo-300">' + o.name + ' (' + o.outfitId + ')</span>' +
+                            '<div class="flex items-center gap-1.5">' +
+                                '<button onclick="window.openOutfitModal(' + idx + ')" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold shadow cursor-pointer" title="Edit"><i class="fa-solid fa-pen"></i> Edit</button>' +
+                                (hasImg ? '<button onclick="window.openOutfitFullScreen(' + idx + ')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded text-[10px] font-bold shadow cursor-pointer" title="View"><i class="fa-solid fa-eye"></i> View</button>' : '') +
+                                '<button onclick="window.downloadOutfitSheetForIndex(' + idx + ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] font-bold shadow cursor-pointer" title="Download"><i class="fa-solid fa-download"></i></button>' +
+                                '<button onclick="window.deleteOutfit(' + idx + ')" class="px-2 py-1 bg-rose-950 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold shadow cursor-pointer transition flex items-center gap-1" title="Padam"><i class="fa-solid fa-trash"></i></button>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="aspect-[16/9] w-full bg-slate-900 rounded overflow-hidden flex items-center justify-center border border-slate-800 relative">' +
+                            (hasImg ? '<img src="' + o.masterSheetImage + '" class="max-h-full max-w-full object-contain">' : '<div class="text-slate-600 text-[10px] italic flex items-center gap-1"><i class="fa-solid fa-image"></i> Kotak Imej Kosong (Default)</div>') +
+                        '</div>' +
+                        '<div class="flex items-center justify-between pt-1">' +
+                            '<div class="text-[10px] text-slate-400 truncate"><strong>Desc:</strong> ' + (o.description || 'Tiada penerangan') + '</div>' +
+                            '<button onclick="window.generateOutfitImageForIndex(' + idx + ')" class="px-2.5 py-1 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded text-[10px] font-bold shadow cursor-pointer flex items-center gap-1 shrink-0">' +
+                                '<i class="fa-solid fa-image"></i> Generate Imej' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+
+        const locationRecContainer = document.getElementById('locationRecommendationsContainer');
+        if (locationRecContainer) {
+            if (projectState.locations.length === 0) {
+                locationRecContainer.innerHTML = '<div class="text-slate-500 text-[11px] italic">Tiada lokasi dalam library. Sila tambah lokasi.</div>';
+            } else {
+                locationRecContainer.innerHTML = projectState.locations.map(function(l, idx) {
+                    let hasImg = !!l.masterSheetImage;
+                    return '<div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2 text-xs">' +
+                        '<div class="flex items-center justify-between">' +
+                            '<span class="font-bold text-emerald-300">' + l.name + ' (' + l.locationId + ')</span>' +
+                            '<div class="flex items-center gap-1.5">' +
+                                '<button onclick="window.openLocationModal(' + idx + ')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold shadow cursor-pointer" title="Edit"><i class="fa-solid fa-pen"></i> Edit</button>' +
+                                (hasImg ? '<button onclick="window.openLocationFullScreen(' + idx + ')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded text-[10px] font-bold shadow cursor-pointer" title="View"><i class="fa-solid fa-eye"></i> View</button>' : '') +
+                                '<button onclick="window.downloadLocationSheetForIndex(' + idx + ')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] font-bold shadow cursor-pointer" title="Download"><i class="fa-solid fa-download"></i></button>' +
+                                '<button onclick="window.deleteLocation(' + idx + ')" class="px-2.5 py-1 bg-rose-950 hover:bg-rose-900 text-rose-300 rounded text-[10px] font-bold shadow cursor-pointer transition flex items-center gap-1" title="Padam"><i class="fa-solid fa-trash"></i></button>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="aspect-[16/9] w-full bg-slate-900 rounded overflow-hidden flex items-center justify-center border border-slate-800 relative">' +
+                            (hasImg ? '<img src="' + l.masterSheetImage + '" class="max-h-full max-w-full object-contain">' : '<div class="text-slate-600 text-[10px] italic flex items-center gap-1"><i class="fa-solid fa-image"></i> Kotak Imej Kosong (Default)</div>') +
+                        '</div>' +
+                        '<div class="flex items-center justify-between pt-1">' +
+                            '<div class="text-[10px] text-slate-400 truncate"><strong>Type:</strong> ' + (l.type || 'Indoor') + ' | <strong>Lighting:</strong> ' + (l.lighting || 'Natural') + '</div>' +
+                            '<button onclick="window.generateLocationImageForIndex(' + idx + ')" class="px-2.5 py-1 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded text-[10px] font-bold shadow cursor-pointer flex items-center gap-1 shrink-0">' +
+                                '<i class="fa-solid fa-image"></i> Generate Imej' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+
+        const container = document.getElementById('persistentStoryboardContainer');
+        if (container) {
+            container.innerHTML = '';
+            let sceneIds = Object.keys(projectState.storyboardData || {});
+            
+            sceneIds.sort(function(a, b) {
+                let scA = projectState.storyboardData[a];
+                let scB = projectState.storyboardData[b];
+                return (scA.scene_number || 1) - (scB.scene_number || 1);
+            });
+
+            if (sceneIds.length === 0) {
+                container.innerHTML = '<div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center space-y-2 text-slate-400 text-xs">' +
+                    '<i class="fa-solid fa-clapperboard text-3xl text-violet-500/50"></i>' +
+                    '<p class="font-medium text-slate-300">Tiada Scene Cards lagi.</p>' +
+                    '<p>Sila masukkan idea cerita di Step 1, tekan <strong>✨ Analisis Idea Cerita, Dialog & Beats (Max 10s)</strong>, dan klik <strong>STEP 6 — SYNC 1:1 SCENE CARDS & DIALOGUES</strong>.</p>' +
+                '</div>';
+                return;
+            }
+
+            sceneIds.forEach(function(sId, index) {
+                let scene = projectState.storyboardData[sId];
+                let isFilled = scene && scene.summary && scene.summary !== "Waiting for scene generation...";
+
+                let charsInScene = projectState.characters.filter(function(c) {
+                    return (scene.characterIds || []).includes(c.character_id);
+                });
+
+                let charNamesText = charsInScene.map(function(c) { return c.name + ' (' + c.character_id + ')'; }).join(', ');
+                if (!charNamesText) charNamesText = 'Tiada Watak (Visual Sahaja)';
+
+                let outfitObj1 = isFilled ? projectState.outfits.find(function(o) { return o.outfitId === scene.outfitId; }) : null;
+                let outfitObj2 = isFilled ? projectState.outfits.find(function(o) { return o.outfitId === scene.outfit2Id; }) : null;
+                let locObj = isFilled ? projectState.locations.find(function(l) { return l.locationId === scene.locationId; }) : null;
+
+                let outfitNameText = outfitObj1 ? outfitObj1.name + ' (' + outfitObj1.outfitId + ')' : 'Default Outfit Variant';
+                if (outfitObj2) outfitNameText += ' & ' + outfitObj2.name;
+                let locNameText = locObj ? locObj.name + ' (' + locObj.locationId + ')' : '-';
+
+                let sceneImg = (scene && scene.image) ? scene.image : '';
+                let imgStatus = (scene && scene.imageStatus) ? scene.imageStatus : 'empty';
+
+                let suitability = scene.generationSuitability || 'READY';
+                let suitabilityBadge = suitability === 'READY' ? 
+                    '<span class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded font-bold">READY (Max 10s)</span>' : 
+                    '<span class="text-[9px] bg-amber-950 text-amber-300 border border-emerald-800 px-2 py-0.5 rounded font-bold">' + suitability + '</span>';
+
+                let sceneDialogues = scene.dialogues || projectState.dialogues.filter(function(d) { return d.sceneId === sId; });
+                sceneDialogues.sort(function(a, b) { return (a.order || 1) - (b.order || 1); });
+
+                let dialogueLines = sceneDialogues.map(function(d) { 
+                    let spkObj = projectState.characters.find(function(c) { return c.character_id === d.speakerId; });
+                    let tgtObj = projectState.characters.find(function(c) { return c.character_id === d.targetCharacterId; });
+                    let spkName = spkObj ? spkObj.name : (d.character || 'Speaker');
+                    let tgtName = tgtObj ? tgtObj.name : (d.targetCharacter || 'Listener');
+                    return spkName + ' → ' + tgtName + ': "' + d.dialogue + '"'; 
+                }).join(' | ');
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3";
+                card.setAttribute('data-scene-id', sId);
+
+                // Use function wrapping for inline base64 mitigation
+                card.innerHTML = '<div class="flex items-center justify-between border-b border-slate-800 pb-2">' +
+                        '<div class="flex items-center gap-2">' +
+                            '<span class="text-xs font-bold bg-violet-950 text-violet-300 border border-violet-800 px-2.5 py-0.5 rounded">SCENE ' + String(scene.scene_number || (index + 1)).padStart(2, '0') + '</span>' +
+                            '<span class="text-xs font-bold text-slate-100">' + (isFilled ? scene.title : 'Waiting for scene sync...') + '</span>' +
+                            suitabilityBadge +
+                        '</div>' +
+                        '<div class="flex items-center gap-2">' +
+                            '<span class="text-[10px] bg-slate-950 text-emerald-300 border border-emerald-800/80 px-2 py-0.5 rounded font-mono font-bold"><i class="fa-solid fa-clock mr-1"></i>' + (isFilled ? scene.duration : '6s') + '</span>' +
+                            '<button onclick="window.openJsonPromptModal(\'' + sId + '\')" class="px-2 py-1 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer shadow" title="Complete Video JSON">' +
+                                '<i class="fa-solid fa-code"></i> Complete Video JSON' +
+                            '</button>' +
+                            '<button onclick="window.openSceneEditor(\'' + sId + '\')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-violet-400 rounded text-[10px] font-bold transition flex items-center gap-1 cursor-pointer border border-slate-700">' +
+                                '<i class="fa-solid fa-pen"></i> Edit' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+
+                    '<div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden relative group">' +
+                        '<div class="aspect-[9/16] max-h-[380px] w-full flex items-center justify-center relative bg-slate-950">' +
+                            (sceneImg ? '<img src="' + sceneImg + '" class="w-full h-full object-cover">' : 
+                                '<div class="text-center p-4 space-y-2">' +
+                                    '<i class="fa-solid fa-image text-3xl text-slate-700"></i>' +
+                                    '<p class="text-[11px] text-slate-500 font-medium">' + (isFilled ? 'Image Slot (Single Moment Focus)' : 'Waiting for scene sync...') + '</p>' +
+                                '</div>') +
+
+                            (imgStatus === 'generating' ? '<div class="absolute inset-0 bg-slate-950/85 backdrop-blur-xs flex flex-col items-center justify-center space-y-3 z-20">' +
+                                    '<div class="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>' +
+                                    '<span class="text-xs font-bold text-violet-300 animate-pulse">Generating Photorealistic Single Visual Moment Shot (Lock 2.0)...</span>' +
+                                '</div>' : '') +
+
+                            '<div class="absolute top-2 right-2 z-30 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">' +
+                                (sceneImg ? '<button onclick="window.openSceneFullScreen(\'' + sId + '\')" class="px-2.5 py-1 bg-slate-900/90 hover:bg-slate-900 text-white rounded-lg text-xs shadow border border-slate-700 cursor-pointer flex items-center gap-1">' +
+                                        '<i class="fa-solid fa-eye"></i> View' +
+                                    '</button>' +
+                                    '<button onclick="window.downloadSceneImage(\'' + sId + '\')" class="px-2.5 py-1 bg-slate-900/90 hover:bg-slate-900 text-white rounded-lg text-xs shadow border border-slate-700 cursor-pointer flex items-center gap-1">' +
+                                        '<i class="fa-solid fa-download"></i> Download' +
+                                    '</button>' : '') +
+                            '</div>' +
+                        '</div>' +
+
+                        '<div class="p-2.5 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between text-xs">' +
+                            '<span class="text-[10px] font-bold uppercase tracking-wider ' + (isFilled ? 'text-emerald-400' : 'text-slate-500') + '">' +
+                                'Status: ' + (isFilled ? imgStatus.toUpperCase() : 'WAITING') +
+                            '</span>' +
+                            '<div class="flex items-center gap-1.5">' +
+                                '<button onclick="window.generateSingleSceneImage(\'' + sId + '\')" class="px-3 py-1 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-bold text-[10px] transition cursor-pointer shadow flex items-center gap-1">' +
+                                    '<i class="fa-solid fa-wand-magic-sparkles"></i> ' + (sceneImg ? 'Regenerate Frame' : 'Generate Frame') +
+                                '</button>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+
+                    '<div class="flex flex-wrap items-center gap-1.5 text-[10px] bg-slate-950 p-2 rounded-lg border border-slate-800/80">' +
+                        '<span class="text-[9px] bg-violet-950 text-violet-300 border border-violet-800 px-2 py-0.5 rounded font-medium"><i class="fa-solid fa-users mr-1"></i>' + charNamesText + '</span>' +
+                        '<span class="text-[9px] bg-indigo-950 text-indigo-300 border border-indigo-800 px-2 py-0.5 rounded font-medium"><i class="fa-solid fa-shirt mr-1"></i>' + outfitNameText + '</span>' +
+                        '<span class="text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded font-medium"><i class="fa-solid fa-earth-americas mr-1"></i>' + locNameText + '</span>' +
+                    '</div>' +
+
+                    '<div class="space-y-2 text-xs">' +
+                        '<div class="flex items-center justify-between">' +
+                            '<p class="text-slate-300"><strong class="text-violet-400">Visual Moment / Summary:</strong> ' + (isFilled ? scene.summary : 'Waiting for scene sync...') + '</p>' +
+                            '<button onclick="window.openEditSpecModal(\'' + sId + '\')" class="px-2.5 py-1 bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-800 rounded font-bold text-[10px] transition flex items-center gap-1 shrink-0 cursor-pointer" title="Edit Spesifikasi & Regenerate Scene Baharu">' +
+                                '<i class="fa-solid fa-wand-magic-sparkles"></i> Edit Spesifikasi' +
+                            '</button>' +
+                        '</div>' +
+                        (isFilled ? '<div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 space-y-1.5 font-mono text-[11px]">' +
+                            '<div><strong class="text-indigo-400">Visual Beat:</strong> ' + scene.visual + '</div>' +
+                            '<div><strong class="text-indigo-400">Action:</strong> ' + scene.action + '</div>' +
+                            '<div><strong class="text-indigo-400">Camera:</strong> ' + scene.camera + '</div>' +
+                            (dialogueLines ? '<div class="text-violet-300 border-t border-slate-800 pt-1 mt-1"><strong>Dialogue Beat:</strong> ' + dialogueLines + '</div>' : '<div class="text-slate-500 italic pt-1 mt-1">Tiada dialog pada scene ini.</div>') +
+                        '</div>' : '') +
+                    '</div>';
+
+                container.appendChild(card);
+            });
+        }
+
+        window.saveProjectToLocalStorage();
+    };
+
+    window.openEditSpecModal = function(sceneId) {
+        const scene = projectState.storyboardData[sceneId];
+        if (!scene) return;
+        document.getElementById('editSpecSceneId').value = sceneId;
+        document.getElementById('specSceneNumTitle').innerText = String(scene.scene_number).padStart(2, '0');
+        document.getElementById('editSpecTextarea').value = scene.summary || scene.visual || '';
+        document.getElementById('editSpecModal')?.classList.remove('hidden');
+    };
+
+    window.closeEditSpecModal = function() {
+        document.getElementById('editSpecModal')?.classList.add('hidden');
+    };
+
+    window.saveAndRegenerateSpec = async function() {
+        const sceneId = document.getElementById('editSpecSceneId').value;
+        const newSpec = document.getElementById('editSpecTextarea').value.trim();
+        if (!sceneId || !newSpec) return;
+
+        const scene = projectState.storyboardData[sceneId];
+        if (!scene) return;
+
+        scene.summary = newSpec;
+        scene.visual = newSpec;
+
+        window.closeEditSpecModal();
+        window.setGlobalLoading(true, "Regenerating Custom Scene Frame...");
+        window.showToast("Menjana semula frame khusus untuk Scene " + scene.scene_number + " berdasarkan spesifikasi anda...");
+        window.renderAll();
+
+        await window.generateSingleSceneImage(sceneId);
+        window.setGlobalLoading(false);
+        window.renderAll();
+    };
+
+    window.analyzeStoryAndAutoDevelop = async function() {
+        const ideaEl = document.getElementById('storyIdeaInput');
+        const idea = ideaEl ? ideaEl.value.trim() : "";
+        if (!idea) {
+            window.showToast("Sila masukkan idea cerita terlebih dahulu!", true);
+            return;
+        }
+
+        const genre = projectState.genre;
+        const subGenre = document.getElementById('subGenreSelect')?.value || projectState.subGenre;
+
+        const autoChar = projectState.autoRecommend.characters;
+        const autoOutfit = projectState.autoRecommend.outfits;
+        const autoLoc = projectState.autoRecommend.locations;
+
+        window.setGlobalLoading(true, "AI Analisis Idea Cerita & Auto Recommend");
+        window.setButtonLoading('analyzeStoryBtn', 'analyzeStoryIcon', 'analyzeStoryBtnText', true, 'Sedang Menganalisis Idea Cerita & Beats...', 'fa-solid fa-wand-magic-sparkles', '✨ Analisis Idea Cerita, Dialog & Beats (Max 10s)');
+        window.showToast("✨ AI sedang menganalisis premis dan menjana beat (Max 10s)...");
+
+        let promptText = 'Berdasarkan idea cerita: "' + idea + '", genre: ' + genre + ' (' + subGenre + '), autoRecommend (characters: ' + autoChar + ', outfits: ' + autoOutfit + ', locations: ' + autoLoc + '), hasilkan JSON tulen lengkap. ATURAN KETAT: Setiap scene WAJIB berdurasi maksimum 10 saat, fokus pada SATU moment visual sahaja. Sertakan karakter, pakaian, lokasi dan dialog kaya dalam "sceneRequirements" beserta eye-line interaksi. Format JSON: ' +
+            '{"title": "...", "logline": "...", "analysis": {"premise": "...", "mainConflict": "...", "theme": "..."}, ' +
+            '"storyBeats": [{"beatId": "beat_01", "order": 1, "title": "Setup", "summary": "...", "duration": "6s"}], ' +
+            '"characters": [{"character_id": "CHAR-001", "name": "Amir", "role": "Main Character", "age": "30", "bio": "...", "face": "Serius", "hair": "Pendek", "clothing": "Jaket"}], ' +
+            '"outfits": [{"outfitId": "OUTFIT-001", "name": "Travel Jacket", "assignedCharId": "CHAR-001", "description": "..."}], ' +
+            '"locations": [{"locationId": "LOC-001", "name": "Rumah Kampung", "type": "Indoor", "lighting": "Natural", "description": "..."}], ' +
+            '"sceneRequirements": [{"sceneId": "scene_01", "storyBeatId": "beat_01", "sceneNumber": 1, "sceneTitle": "Setup", "summary": "...", "visualDescription": "...", "action": "...", "cameraDirection": "Wide shot", "duration": "6s", "generationSuitability": "READY", "characterIds": ["CHAR-001"], "outfitId": "OUTFIT-001", "locationId": "LOC-001", "dialogues": [{"order": 1, "speakerId": "CHAR-001", "targetCharacterId": "CHAR-001", "character": "Amir", "targetCharacter": "Amir", "dialogue": "Kita sudah sampai.", "emotion": "tenang", "delivery": "biasa"}]}]}';
+
+        try {
+            const data = await window.callGeminiAPI('gemini-2.5-flash', [{ text: promptText }]);
+            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+            const parsed = window.safeParseGeminiJSON(rawText);
+
+            projectState.title = parsed.title || idea.substring(0, 30);
+            projectState.logline = parsed.logline || idea;
+            
+            let beats = parsed.storyBeats || [];
+            let sceneReqs = parsed.sceneRequirements || [];
+
+            sceneReqs.forEach(function(req) {
+                let dNum = parseInt(String(req.duration || '6s').replace('s', '').trim());
+                if (isNaN(dNum) || dNum > 10) req.duration = '8s';
+                else req.duration = dNum + 's';
+                if (!req.generationSuitability) req.generationSuitability = 'READY';
+            });
+
+            projectState.storyAnalysisData = Object.assign({}, parsed.analysis || {}, { storyBeats: beats, sceneRequirements: sceneReqs });
+
+            if (autoChar && parsed.characters && parsed.characters.length > 0) {
+                projectState.characters = parsed.characters.map(function(c, i) {
+                    return {
+                        character_id: c.character_id || ('CHAR-' + String(i + 1).padStart(3, '0')),
+                        name: c.name || 'Karakter ' + (i + 1),
+                        role: c.role || 'Main Character',
+                        age: c.age || '25',
+                        bio: c.bio || '',
+                        face: c.face || 'Wajah ekspresif',
+                        hair: c.hair || 'Rambut kemas',
+                        body: c.body || 'Tubuh proporsional',
+                        clothing: c.clothing || 'Pakaian kasual',
+                        outfits: [],
+                        image: '',
+                        masterSheetImage: ''
+                    };
+                });
+            }
+
+            if (autoOutfit && parsed.outfits && parsed.outfits.length > 0) {
+                projectState.outfits = parsed.outfits.map(function(o, i) {
+                    return {
+                        outfitId: o.outfitId || ('OUTFIT-' + String(i + 1).padStart(3, '0')),
+                        name: o.name || 'Outfit ' + (i + 1),
+                        assignedCharId: o.assignedCharId || 'CHAR-001',
+                        description: o.description || 'Pakaian standard',
+                        masterSheetImage: ''
+                    };
+                });
+            }
+
+            if (autoLoc && parsed.locations && parsed.locations.length > 0) {
+                projectState.locations = parsed.locations.map(function(l, i) {
+                    return {
+                        locationId: l.locationId || ('LOC-' + String(i + 1).padStart(3, '0')),
+                        name: l.name || 'Lokasi ' + (i + 1),
+                        type: l.type || 'Indoor',
+                        lighting: l.lighting || 'Natural',
+                        description: l.description || 'Penerangan lokasi',
+                        masterSheetImage: ''
+                    };
+                });
+            }
+
+            projectState.dialogues = [];
+            sceneReqs.forEach(function(req) {
+                if (req.dialogues && Array.isArray(req.dialogues)) {
+                    req.dialogues.forEach(function(dlg, dIdx) {
+                        projectState.dialogues.push({
+                            dialogueId: 'dlg_' + req.sceneId + '_' + (dIdx + 1),
+                            sceneId: req.sceneId,
+                            order: dlg.order || (dIdx + 1),
+                            speakerId: dlg.speakerId || 'CHAR-001',
+                            targetCharacterId: dlg.targetCharacterId || 'CHAR-001',
+                            character: dlg.character || 'Amir',
+                            targetCharacter: dlg.targetCharacter || 'Amir',
+                            dialogue: dlg.dialogue || '',
+                            emotion: dlg.emotion || 'neutral',
+                            delivery: dlg.delivery || 'normal'
+                        });
+                    });
+                }
+            });
+
+            window.showToast("✨ Analisis Idea Cerita, Dialog & Auto Recommend Berjaya!");
+        } catch (e) {
+            window.raffLog("Analysis Error:", e);
+            projectState.title = idea.substring(0, 30);
+            projectState.logline = idea;
+            projectState.storyAnalysisData = {
+                title: projectState.title,
+                logline: idea,
+                premise: idea,
+                mainConflict: "Perjalanan dan penemuan kebenaran.",
+                storyBeats: [{ beatId: "beat_01", order: 1, title: "Tiba", summary: idea, duration: "6s" }],
+                sceneRequirements: [{ sceneId: "scene_01", storyBeatId: "beat_01", sceneNumber: 1, sceneTitle: "Babak 1", summary: idea, visualDescription: "Cinematic shot", action: "Action", cameraDirection: "Wide shot", duration: "6s", generationSuitability: "READY", characterIds: ["CHAR-001"], outfitId: "OUTFIT-001", locationId: "LOC-001", dialogues: [] }]
+            };
+            projectState.characters = [{ character_id: "CHAR-001", name: "Amir", role: "Main Character", age: "30", bio: idea, face: "Serius", hair: "Pendek", clothing: "Jaket", outfits: [], image: "", masterSheetImage: "" }];
+            projectState.outfits = [{ outfitId: "OUTFIT-001", name: "Travel Jacket", assignedCharId: "CHAR-001", description: "Jaket", masterSheetImage: "" }];
+            projectState.locations = [{ locationId: "LOC-001", name: "Rumah Lama", type: "Indoor", lighting: "Malap", description: "Rumah kayu", masterSheetImage: "" }];
+            
+            window.showToast(window.getFriendlyErrorMessage(e) + " (Analisis selesai dengan Fallback)", true);
+        } finally {
+            window.setGlobalLoading(false);
+            window.setButtonLoading('analyzeStoryBtn', 'analyzeStoryIcon', 'analyzeStoryBtnText', false, '', 'fa-solid fa-wand-magic-sparkles', '✨ Analisis Idea Cerita, Dialog & Beats (Max 10s)');
+            window.renderAll();
+        }
+    };
+
+    window.openStoryAnalysisModal = function() {
+        const bodyEl = document.getElementById('storyAnalysisModalBody');
+        if (!bodyEl) return;
+        const d = projectState.storyAnalysisData;
+        if (!d || Object.keys(d).length === 0) {
+            bodyEl.innerHTML = '<div class="p-4 text-center text-slate-400">Tiada data analisis cerita. Sila jalankan "Analisis Idea Cerita" di Step 1 terlebih dahulu.</div>';
+        } else {
+            let beats = d.storyBeats || (d.storyStructure && d.storyStructure.beats) || [];
+            let reqs = d.sceneRequirements || [];
+            let dlgs = projectState.dialogues || [];
+
+            let beatsHtml = beats.map(function(b) {
+                return '<div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-1">' +
+                    '<div class="font-bold text-violet-300">Beat ' + (b.order || '') + ': ' + (b.title || '') + ' (' + (b.duration || '6s') + ')</div>' +
+                    '<div class="text-slate-300 text-[11px]">' + (b.summary || '') + '</div>' +
+                '</div>';
+            }).join('');
+
+            let reqsHtml = reqs.map(function(r) {
+                return '<div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-1">' +
+                    '<div class="font-bold text-indigo-300">Scene ' + (r.sceneNumber || '') + ': ' + (r.sceneTitle || '') + ' (' + (r.duration || '6s') + ')</div>' +
+                    '<div class="text-slate-300 text-[11px]"><strong>Summary:</strong> ' + (r.summary || '') + '</div>' +
+                    '<div class="text-slate-400 text-[10px]"><strong>Visual:</strong> ' + (r.visualDescription || '') + '</div>' +
+                '</div>';
+            }).join('');
+
+            let dlgsHtml = dlgs.map(function(dlg) {
+                return '<div class="bg-slate-900 p-2 rounded border border-slate-800 text-[11px]">' +
+                    '<strong class="text-violet-400">' + (dlg.character || dlg.speakerId) + ' → ' + (dlg.targetCharacter || dlg.targetCharacterId) + ':</strong> "' + (dlg.dialogue || '') + '" <span class="text-slate-400">(' + (dlg.emotion || 'neutral') + ')</span>' +
+                '</div>';
+            }).join('');
+
+            bodyEl.innerHTML = '<div class="space-y-4">' +
+                '<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5">' +
+                    '<div><strong>Title:</strong> ' + (d.title || projectState.title || '-') + '</div>' +
+                    '<div><strong>Logline:</strong> ' + (d.logline || projectState.logline || '-') + '</div>' +
+                    '<div><strong>Premise:</strong> ' + (d.premise || '-') + '</div>' +
+                    '<div><strong>Main Conflict:</strong> ' + (d.mainConflict || '-') + '</div>' +
+                '</div>' +
+                '<div class="space-y-2"><h4 class="font-bold text-violet-300 text-xs">Story Beats (Max 10s):</h4>' + (beatsHtml || '<div class="text-slate-500 italic">Tiada beats.</div>') + '</div>' +
+                '<div class="space-y-2"><h4 class="font-bold text-indigo-300 text-xs">Scene Requirements:</h4>' + (reqsHtml || '<div class="text-slate-500 italic">Tiada scene requirements.</div>') + '</div>' +
+                '<div class="space-y-2"><h4 class="font-bold text-emerald-300 text-xs">Extracted Dialogues & Eye-Lines:</h4>' + (dlgsHtml || '<div class="text-slate-500 italic">Tiada dialog.</div>') + '</div>' +
+            '</div>';
+        }
+        document.getElementById('storyAnalysisModal')?.classList.remove('hidden');
+    };
+    window.closeStoryAnalysisModal = function() {
+        document.getElementById('storyAnalysisModal')?.classList.add('hidden');
+    };
+
+    window.handleCharImageUpload = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const base64 = evt.target.result;
+            const prev = document.getElementById('charModalImgPreview');
+            if (prev) { prev.src = base64; prev.classList.remove('hidden'); }
+            document.getElementById('charModalImgPlaceholder')?.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.handleModalCharOutfitUpload = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const base64 = evt.target.result;
+            const prev = document.getElementById('charModalOutfitImgPreview');
+            if (prev) { prev.src = base64; prev.classList.remove('hidden'); }
+            document.getElementById('charModalOutfitImgPlaceholder')?.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.generateAutoCompositeCharacterSheet = async function() {
+        const charImgPreview = document.getElementById('charModalImgPreview');
+        const outfitImgPreview = document.getElementById('charModalOutfitImgPreview');
+        
+        let charImgBase64 = (charImgPreview && charImgPreview.src.startsWith('data:')) ? charImgPreview.src : '';
+        let outfitImgBase64 = (outfitImgPreview && outfitImgPreview.src.startsWith('data:')) ? outfitImgPreview.src : '';
+
+        if (!charImgBase64) {
+            window.showToast("Upload gambar karakter terlebih dahulu!", true);
+            return;
+        }
+
+        window.setGlobalLoading(true, "Auto Composite Studio V2 (Lock 2.0)");
+        window.setButtonLoading('autoCompositeBtn', 'autoCompositeIcon', 'autoCompositeBtnText', true, 'Menjana Master Sheet...', 'fa-solid fa-wand-magic-sparkles', 'GENERATE CHARACTER SHEET');
+        window.showToast("Menjana Character Master Sheet (Photorealistic Live-Action)...");
+
+        let charName = document.getElementById('charName')?.value.trim() || "Karakter Utama";
+        let promptText = 'Strictly photorealistic 1080p HD live-action cinema film still, professional cinematography, 35mm film grain, real human actor, real fabric texture, zero illustration, zero cartoon, zero animation. Full-body character master sheet. 100% preserve character face identity, head shape, hair, eyes, nose, lips, and facial features from the first character reference image. STRICT RULE: DO NOT use any facial features, head, face, skin tone, or identity from the second outfit reference image. Completely ignore any person or face in the outfit image. Extract ONLY the clothing design, colors, pattern, texture, and style from the second outfit reference image and apply that clothing onto the character body. Clean studio background.';
+
+        let parts = [{ text: promptText }];
+        let cMime = charImgBase64.substring(5, charImgBase64.indexOf(';'));
+        let cClean = charImgBase64.substring(charImgBase64.indexOf(',') + 1);
+        parts.push({ inlineData: { mimeType: cMime, data: cClean } });
+
+        if (outfitImgBase64) {
+            let oMime = outfitImgBase64.substring(5, outfitImgBase64.indexOf(';'));
+            let oClean = outfitImgBase64.substring(outfitImgBase64.indexOf(',') + 1);
+            parts.push({ inlineData: { mimeType: oMime, data: oClean } });
+        }
+
+        try {
+            const result = await window.callGeminiAPI('gemini-3.1-flash-image', parts, {
+                generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: "16:9" } }
+            });
+            const imageUrl = window.extractGeneratedImage(result);
+
+            if (imageUrl) {
+                const mImg = document.getElementById('charMasterSheetImg');
+                if (mImg) mImg.src = imageUrl;
+                document.getElementById('charMasterSheetDisplayBox')?.classList.remove('hidden');
+                window.showToast("Auto Composite Master Sheet berjaya dijana (Lock 2.0)!");
+            } else {
+                throw new Error("NO_IMAGE_GENERATED");
+            }
+        } catch (e) {
+            let svgUrl = window.getFallbackSceneSvgDataUrl(1, charName + " Composite Master Sheet");
+            const mImg = document.getElementById('charMasterSheetImg');
+            if (mImg) mImg.src = svgUrl;
+            document.getElementById('charMasterSheetDisplayBox')?.classList.remove('hidden');
+            window.showToast(window.getFriendlyErrorMessage(e) + " Paparan fallback digunakan.", true);
+        } finally {
+            window.setGlobalLoading(false);
+            window.setButtonLoading('autoCompositeBtn', 'autoCompositeIcon', 'autoCompositeBtnText', false, '', 'fa-solid fa-wand-magic-sparkles', 'GENERATE CHARACTER SHEET');
+        }
+    };
+
+    window.openCharacterModal = function(editIdx) {
+        if (editIdx === undefined) editIdx = -1;
+        document.getElementById('editCharIndex').value = editIdx;
+        let nextIdNum = projectState.characters.length + 1;
+        let autoId = 'CHAR-' + String(nextIdNum).padStart(3, '0');
+
+        document.getElementById('charMasterSheetDisplayBox')?.classList.add('hidden');
+
+        if (editIdx >= 0) {
+            const c = projectState.characters[editIdx];
+            document.getElementById('charIdField').value = c.character_id || autoId;
+            document.getElementById('charName').value = c.name || '';
+            document.getElementById('charStoryRole').value = c.role || 'Main Character';
+            document.getElementById('charAge').value = c.age || '';
+            document.getElementById('charBio').value = c.bio || '';
+            document.getElementById('charFace').value = c.face || '';
+            document.getElementById('charHair').value = c.hair || '';
+            document.getElementById('charClothing').value = c.clothing || '';
+
+            if (c.image) {
+                const prev = document.getElementById('charModalImgPreview');
+                prev.src = c.image;
+                prev.classList.remove('hidden');
+                document.getElementById('charModalImgPlaceholder').classList.add('hidden');
+            }
+            if (c.masterSheetImage) {
+                document.getElementById('charMasterSheetImg').src = c.masterSheetImage;
+                document.getElementById('charMasterSheetDisplayBox').classList.remove('hidden');
+            }
+        } else {
+            document.getElementById('charIdField').value = autoId;
+            document.getElementById('charName').value = '';
+            document.getElementById('charStoryRole').value = 'Main Character';
+            document.getElementById('charAge').value = '';
+            document.getElementById('charBio').value = '';
+            document.getElementById('charFace').value = '';
+            document.getElementById('charHair').value = '';
+            document.getElementById('charClothing').value = '';
+            document.getElementById('charModalImgPreview').classList.add('hidden');
+            document.getElementById('charModalImgPlaceholder').classList.remove('hidden');
+            document.getElementById('charModalOutfitImgPreview').classList.add('hidden');
+            document.getElementById('charModalOutfitImgPlaceholder').classList.remove('hidden');
+        }
+        document.getElementById('characterModal')?.classList.remove('hidden');
+    };
+
+    window.closeCharacterModal = function() {
+        document.getElementById('characterModal')?.classList.add('hidden');
+    };
+
+    window.saveCharacter = function() {
+        const editIdx = parseInt(document.getElementById('editCharIndex').value);
+        const character_id = document.getElementById('charIdField').value;
+        const name = document.getElementById('charName').value.trim() || "Karakter";
+        const role = document.getElementById('charStoryRole').value;
+        const age = document.getElementById('charAge').value.trim();
+        const bio = document.getElementById('charBio').value.trim();
+        const face = document.getElementById('charFace').value.trim();
+        const hair = document.getElementById('charHair').value.trim();
+        const clothing = document.getElementById('charClothing').value.trim();
+        
+        const previewEl = document.getElementById('charModalImgPreview');
+        const image = (previewEl && previewEl.src.startsWith('data:')) ? previewEl.src : '';
+
+        const masterSheetImg = document.getElementById('charMasterSheetImg');
+        const masterSheetImage = (masterSheetImg && masterSheetImg.src.startsWith('data:')) ? masterSheetImg.src : '';
+
+        const charObj = { 
+            character_id: character_id, 
+            name: name, 
+            role: role, 
+            age: age, 
+            bio: bio, 
+            face: face, 
+            hair: hair, 
+            clothing: clothing, 
+            image: image, 
+            masterSheetImage: masterSheetImage
+        };
+
+        if (editIdx >= 0) {
+            projectState.characters[editIdx] = charObj;
+        } else {
+            projectState.characters.push(charObj);
+        }
+
+        window.closeCharacterModal();
+        window.renderAll();
+        window.showToast("Character Master Sheet disimpan!");
+    };
+
+    window.deleteCharacter = function(idx) {
+        window.customConfirm("Adakah anda pasti mahu memadam karakter ini?", function() {
+            projectState.characters.splice(idx, 1);
+            window.renderAll();
+            window.showToast("Karakter dipadam.");
+        });
+    };
+
+    window.generateCharacterSheetForIndex = async function(idx) {
+        let c = projectState.characters[idx];
+        if (!c) return;
+        window.setGlobalLoading(true, "Generating Photorealistic Character Sheet");
+        
+        let promptText = 'Strictly photorealistic 1080p HD live-action cinema film still of character named ' + c.name + ', ' + (c.age || '30 years old') + ', ' + (c.face || 'serious mature face') + ', ' + (c.hair || 'short black hair') + ', wearing ' + (c.clothing || 'casual outfit') + '. Professional cinematography, 35mm film grain, real human actor, real fabric texture, zero illustration, zero cartoon, zero animation, studio background.';
+
+        try {
+            let parts = [{ text: promptText }];
+            if (c.image && c.image.startsWith('data:')) {
+                let mime = c.image.substring(5, c.image.indexOf(';'));
+                let clean = c.image.substring(c.image.indexOf(',') + 1);
+                parts.push({ inlineData: { mimeType: mime, data: clean } });
+            }
+            
+            const result = await window.callGeminiAPI('gemini-3.1-flash-image', parts, {
+                generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: "16:9" } }
+            });
+            const imageUrl = window.extractGeneratedImage(result);
+
+            if (imageUrl) {
+                c.masterSheetImage = imageUrl;
+                window.showToast("Character Master Sheet berjaya dijana!");
+            } else {
+                throw new Error("NO_IMAGE_GENERATED");
+            }
+        } catch (e) {
+            c.masterSheetImage = window.getFallbackSceneSvgDataUrl(idx + 1, c.name + " Master Sheet");
+            window.showToast(window.getFriendlyErrorMessage(e) + " Paparan fallback digunakan.", true);
+        } finally {
+            window.setGlobalLoading(false);
+            window.renderAll();
+        }
+    };
+
+    window.downloadCharacterSheetForIndex = function(idx) {
+        let c = projectState.characters[idx];
+        if (!c || !c.masterSheetImage) {
+            window.showToast("Tiada imej master sheet untuk dimuat turun.", true);
+            return;
+        }
+        const a = document.createElement('a');
+        a.href = c.masterSheetImage;
+        a.download = c.name + '_character_master_sheet.png';
+        a.click();
+        window.showToast("Dimuat turun!");
+    };
+
+    window.openOutfitModal = function(editIdx) {
+        if (editIdx === undefined) editIdx = -1;
+        document.getElementById('outfitEditIndex').value = editIdx;
+        let nextIdNum = projectState.outfits.length + 1;
+        let autoId = 'OUTFIT-' + String(nextIdNum).padStart(3, '0');
+
+        const charSel = document.getElementById('outfitAssignedChar');
+        if (charSel) {
+            charSel.innerHTML = '';
+            projectState.characters.forEach(function(c) {
+                const opt = document.createElement('option');
+                opt.value = c.character_id;
+                opt.innerText = c.name + ' (' + c.character_id + ')';
+                charSel.appendChild(opt);
+            });
+        }
+
+        if (editIdx >= 0) {
+            const o = projectState.outfits[editIdx];
+            document.getElementById('outfitIdField').value = o.outfitId || autoId;
+            document.getElementById('outfitName').value = o.name || '';
+            document.getElementById('outfitDesc').value = o.description || '';
+            if (o.assignedCharId) charSel.value = o.assignedCharId;
+
+            if (o.masterSheetImage) {
+                document.getElementById('outfitMasterSheetImg').src = o.masterSheetImage;
+                document.getElementById('outfitMasterSheetImg').classList.remove('hidden');
+                document.getElementById('outfitMasterSheetPlaceholder').classList.add('hidden');
+                document.getElementById('outfitSheetActionBtns').classList.remove('hidden');
+                document.getElementById('outfitModalImgPreview').src = o.masterSheetImage;
+                document.getElementById('outfitModalImgPreview').classList.remove('hidden');
+                document.getElementById('outfitModalImgPlaceholder').classList.add('hidden');
+            } else {
+                document.getElementById('outfitMasterSheetImg').classList.add('hidden');
+                document.getElementById('outfitMasterSheetPlaceholder').classList.remove('hidden');
+                document.getElementById('outfitSheetActionBtns').classList.add('hidden');
+                document.getElementById('outfitModalImgPreview').classList.add('hidden');
+                document.getElementById('outfitModalImgPlaceholder').classList.remove('hidden');
+            }
+        } else {
+            document.getElementById('outfitIdField').value = autoId;
+            document.getElementById('outfitName').value = '';
+            document.getElementById('outfitDesc').value = '';
+            document.getElementById('outfitMasterSheetImg').classList.add('hidden');
+            document.getElementById('outfitMasterSheetPlaceholder').classList.remove('hidden');
+            document.getElementById('outfitSheetActionBtns').classList.add('hidden');
+            document.getElementById('outfitModalImgPreview').classList.add('hidden');
+            document.getElementById('outfitModalImgPlaceholder').classList.remove('hidden');
+        }
+
+        document.getElementById('outfitModal')?.classList.remove('hidden');
+    };
+    window.closeOutfitModal = function() {
+        document.getElementById('outfitModal')?.classList.add('hidden');
+    };
+
+    window.openUseCharacterAsOutfitModal = function() {
+        const listEl = document.getElementById('useCharAsOutfitList');
+        if (!listEl) return;
+        if (projectState.characters.length === 0) {
+            listEl.innerHTML = '<div class="text-slate-500 italic text-xs">Tiada karakter di dalam library. Sila tambah karakter dahulu.</div>';
+        } else {
+            listEl.innerHTML = projectState.characters.map(function(c, cIdx) {
+                let img = c.masterSheetImage || c.image || '';
+                return '<div onclick="window.selectCharacterAsOutfit(' + cIdx + ')" class="bg-slate-950 p-2 rounded-lg border border-slate-800 hover:border-violet-500 cursor-pointer flex items-center gap-3 transition">' +
+                    '<div class="w-12 h-12 bg-slate-900 rounded overflow-hidden shrink-0 flex items-center justify-center">' +
+                        (img ? '<img src="' + img + '" class="w-full h-full object-cover">' : '<i class="fa-solid fa-user text-slate-600"></i>') +
+                    '</div>' +
+                    '<div>' +
+                        '<div class="font-bold text-violet-300">' + c.name + ' (' + c.character_id + ')</div>' +
+                        '<div class="text-[10px] text-slate-400">Gunakan rujukan imej karakter ini sebagai pakaian.</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+        document.getElementById('useCharAsOutfitModal')?.classList.remove('hidden');
+    };
+    window.closeUseCharacterAsOutfitModal = function() {
+        document.getElementById('useCharAsOutfitModal')?.classList.add('hidden');
+    };
+    window.selectCharacterAsOutfit = function(cIdx) {
+        let c = projectState.characters[cIdx];
+        if (!c) return;
+        let img = c.masterSheetImage || c.image || '';
+        if (!img) {
+            window.showToast("Karakter ini tiada imej rujukan.", true);
+            return;
+        }
+        const prev = document.getElementById('outfitModalImgPreview');
+        if (prev) {
+            prev.src = img;
+            prev.classList.remove('hidden');
+        }
+        document.getElementById('outfitModalImgPlaceholder')?.classList.add('hidden');
+        document.getElementById('outfitName').value = c.name + ' Outfit';
+        window.closeUseCharacterAsOutfitModal();
+        window.showToast("Imej rujukan karakter berjaya dimasukkan sebagai rujukan pakaian!");
+    };
+
+    window.handleOutfitImageUpload = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const base64 = evt.target.result;
+            const prev = document.getElementById('outfitModalImgPreview');
+            if (prev) { prev.src = base64; prev.classList.remove('hidden'); }
+            document.getElementById('outfitModalImgPlaceholder')?.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.generateOutfitImageFor = async function(outfitId) {
+        let name = document.getElementById('outfitName')?.value.trim() || "Outfit";
+        let desc = document.getElementById('outfitDesc')?.value.trim() || "Detailed clothing";
+        
+        const previewEl = document.getElementById('outfitModalImgPreview');
+        let outfitImgBase64 = (previewEl && previewEl.src && previewEl.src.startsWith('data:')) ? previewEl.src : '';
+
+        window.setGlobalLoading(true, "Generating Photorealistic Outfit Sheet");
+        window.setButtonLoading('aiGenOutfitSheetImgBtn', 'aiGenOutfitSheetIcon', 'aiGenOutfitSheetBtnText', true, 'Menjana Outfit Sheet...', 'fa-solid fa-wand-magic-sparkles', 'Generate Outfit Sheet (Photoreal)');
+        window.showToast("Menjana Outfit Master Sheet (100% rujukan imej yang diupload)...");
+
+        let promptText = '';
+        let parts = [];
+
+        if (outfitImgBase64) {
+            promptText = 'Strictly photorealistic 1080p HD live-action cinema film still, professional cinematography, 35mm film grain, real human actor, real fabric texture, zero illustration, zero cartoon, zero animation. Multi-angle outfit master sheet showing a professional model standing in full view wearing the clothing outfit. 100% STRICTLY MERUJUK DAN MENGEKALKAN 100% rekaan, warna, corak, tekstur dan fabrik dari imej rujukan pakaian yang diupload TANPA MENGUBAH SEDIKIT PUN. Clean studio background.';
+            parts.push({ text: promptText });
+            let mime = outfitImgBase64.substring(5, outfitImgBase64.indexOf(';'));
+            let clean = outfitImgBase64.substring(outfitImgBase64.indexOf(',') + 1);
+            parts.push({ inlineData: { mimeType: mime, data: clean } });
+        } else {
+            promptText = 'Strictly photorealistic 1080p HD live-action cinema film still, professional cinematography, 35mm film grain, real human actor, real fabric texture, zero illustration, zero cartoon, zero animation. Multi-angle outfit master sheet showing a professional model standing in full view wearing the clothing outfit named "' + name + '", description: "' + desc + '". Clean studio background.';
+            parts.push({ text: promptText });
+        }
+
+        try {
+            const result = await window.callGeminiAPI('gemini-3.1-flash-image', parts, {
+                generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: "16:9" } }
+            });
+            const imageUrl = window.extractGeneratedImage(result);
+
+            if (imageUrl) {
+                const mImg = document.getElementById('outfitMasterSheetImg');
+                if (mImg) {
+                    mImg.src = imageUrl;
+                    mImg.classList.remove('hidden');
+                }
+                document.getElementById('outfitMasterSheetPlaceholder')?.classList.add('hidden');
+                document.getElementById('outfitSheetActionBtns')?.classList.remove('hidden');
+                if (previewEl && !previewEl.src.startsWith('data:')) {
+                    previewEl.src = imageUrl;
+                    previewEl.classList.remove('hidden');
+                    document.getElementById('outfitModalImgPlaceholder')?.classList.add('hidden');
+                }
+                window.showToast("Outfit Master Sheet berjaya dijana (100% merujuk imej)!");
+            } else {
+                throw new Error("NO_IMAGE_GENERATED");
+            }
+        } catch (e) {
+            let svgUrl = window.getFallbackSceneSvgDataUrl(1, name + " Master Sheet Multi-Angle");
+            const mImg = document.getElementById('outfitMasterSheetImg');
+            if (mImg) {
+                mImg.src = svgUrl;
+                mImg.classList.remove('hidden');
+            }
+            document.getElementById('outfitMasterSheetPlaceholder')?.classList.add('hidden');
+            document.getElementById('outfitSheetActionBtns')?.classList.remove('hidden');
+            window.showToast(window.getFriendlyErrorMessage(e) + " Paparan fallback digunakan.", true);
+        } finally {
+            window.setGlobalLoading(false);
+            window.setButtonLoading('aiGenOutfitSheetImgBtn', 'aiGenOutfitSheetIcon', 'aiGenOutfitSheetBtnText', false, '', 'fa-solid fa-image', 'Generate Outfit Sheet (Photoreal)');
+        }
+    };
+
+    window.generateOutfitImageForIndex = async function(idx) {
+        let o = projectState.outfits[idx];
+        if (!o) return;
+        window.setGlobalLoading(true, "Generating Photorealistic Outfit Sheet");
+        window.showToast("Menjana Outfit Sheet...");
+
+        let promptText = 'Strictly photorealistic 1080p HD live-action cinema film still, professional cinematography, 35mm film grain, real human actor, real fabric texture, zero illustration, zero cartoon. Multi-angle outfit master sheet showing a character wearing ' + o.name + ', description: ' + (o.description || 'Detailed clothing') + '. Clean studio background.';
+
+        try {
+            let parts = [{ text: promptText }];
+            const result = await window.callGeminiAPI('gemini-3.1-flash-image', parts, {
+                generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: "16:9" } }
+            });
+            const imageUrl = window.extractGeneratedImage(result);
+
+            if (imageUrl) {
+                o.masterSheetImage = imageUrl;
+                window.showToast("Outfit Master Sheet berjaya dijana!");
+            } else {
+                throw new Error("NO_IMAGE_GENERATED");
+            }
+        } catch (e) {
+            o.masterSheetImage = window.getFallbackSceneSvgDataUrl(idx + 1, o.name + " Master Sheet");
+            window.showToast(window.getFriendlyErrorMessage(e) + " Paparan fallback digunakan.", true);
+        } finally {
+            window.setGlobalLoading(false);
+            window.renderAll();
+        }
+    };
+
+    window.downloadOutfitSheetForIndex = function(idx) {
+        let o = projectState.outfits[idx];
+        if (!o || !o.masterSheetImage) {
+            window.showToast("Tiada imej outfit sheet untuk dimuat turun.", true);
+            return;
+        }
+        const a = document.createElement('a');
+        a.href = o.masterSheetImage;
+        a.download = o.name + '_outfit_master_sheet.png';
+        a.click();
+        window.showToast("Dimuat turun!");
+    };
+
+    window.saveOutfit = function() {
+        const editIdx = parseInt(document.getElementById('outfitEditIndex').value);
+        const outfitId = document.getElementById('outfitIdField').value;
+        const name = document.getElementById('outfitName').value.trim() || "Outfit";
+        const assignedCharId = document.getElementById('outfitAssignedChar').value;
+        const description = document.getElementById('outfitDesc').value.trim();
+        const mImg = document.getElementById('outfitMasterSheetImg');
+        const masterSheetImage = (mImg && mImg.src.startsWith('data:')) ? mImg.src : '';
+
+        const outfitObj = { outfitId: outfitId, name: name, assignedCharId: assignedCharId, description: description, masterSheetImage: masterSheetImage };
+        if (editIdx >= 0) projectState.outfits[editIdx] = outfitObj;
+        else projectState.outfits.push(outfitObj);
+
+        window.closeOutfitModal();
+        window.renderAll();
+        window.showToast("Outfit disimpan!");
+    };
+
+    window.deleteOutfit = function(idx) {
+        window.customConfirm("Adakah anda pasti mahu memadam outfit ini?", function() {
+            projectState.outfits.splice(idx, 1);
+            window.renderAll();
+            window.showToast("Outfit dipadam.");
+        });
+    };
+
+    window.openLocationModal = function(editIdx) {
+        if (editIdx === undefined) editIdx = -1;
+        document.getElementById('locEditIndex').value = editIdx;
+        let nextIdNum = projectState.locations.length + 1;
+        let autoId = 'LOC-' + String(nextIdNum).padStart(3, '0');
+
+        if (editIdx >= 0) {
+            const l = projectState.locations[editIdx];
+            document.getElementById('locIdField').value = l.locationId || autoId;
+            document.getElementById('locName').value = l.name || '';
+            document.getElementById('locType').value = l.type || '';
+            document.getElementById('locLighting').value = l.lighting || '';
+            document.getElementById('locDesc').value = l.description || '';
+
+            if (l.masterSheetImage) {
+                document.getElementById('locMasterSheetImg').src = l.masterSheetImage;
+                document.getElementById('locMasterSheetImg').classList.remove('hidden');
+                document.getElementById('locMasterSheetPlaceholder').classList.add('hidden');
+                document.getElementById('locSheetActionBtns').classList.remove('hidden');
+                document.getElementById('locModalImgPreview').src = l.masterSheetImage;
+                document.getElementById('locModalImgPreview').classList.remove('hidden');
+                document.getElementById('locModalImgPlaceholder').classList.add('hidden');
+            } else {
+                document.getElementById('locMasterSheetImg').classList.add('hidden');
+                document.getElementById('locMasterSheetPlaceholder').classList.remove('hidden');
+                document.getElementById('locSheetActionBtns').classList.add('hidden');
+                document.getElementById('locModalImgPreview').classList.add('hidden');
+                document.getElementById('locModalImgPlaceholder').classList.remove('hidden');
+            }
+        } else {
+            document.getElementById('locIdField').value = autoId;
+            document.getElementById('locName').value = '';
+            document.getElementById('locType').value = '';
+            document.getElementById('locLighting').value = '';
+            document.getElementById('locDesc').value = '';
+            document.getElementById('locMasterSheetImg').classList.add('hidden');
+            document.getElementById('locMasterSheetPlaceholder').classList.remove('hidden');
+            document.getElementById('locSheetActionBtns').classList.add('hidden');
+            document.getElementById('locModalImgPreview').classList.add('hidden');
+            document.getElementById('locModalImgPlaceholder').classList.remove('hidden');
+        }
+
+        document.getElementById('locationModal')?.classList.remove('hidden');
+    };
+    window.closeLocationModal = function() {
+        document.getElementById('locationModal')?.classList.add('hidden');
+    };
+
+    window.handleLocationImageUpload = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const base64 = evt.target.result;
+            const prev = document.getElementById('locModalImgPreview');
+            if (prev) { prev.src = base64; prev.classList.remove('hidden'); }
+            document.getElementById('locModalImgPlaceholder')?.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.generateMasterLocationSheetImage = async function() {
+        let name = document.getElementById('locName')?.value.trim() || "Lokasi";
+        let desc = document.getElementById('locDesc')?.value.trim() || "Scenic environment";
+        let lighting = document.getElementById('locLighting')?.value.trim() || "Natural lighting";
+        window.setGlobalLoading(true, "Generating Photorealistic Location Sheet");
+
+        let promptText = 'Strictly photorealistic 1080p HD live-action cinema film still of location named ' + name + ', description: ' + desc + ', lighting: ' + lighting + '. Professional cinematography, real physical architecture and nature texture, completely empty uninhabited environment, ZERO humans, ZERO characters, zero illustration, zero cartoon, zero animation.';
+
+        try {
+            const previewEl = document.getElementById('locModalImgPreview');
+            let parts = [{ text: promptText }];
+            if (previewEl && previewEl.src && previewEl.src.startsWith('data:')) {
+                let mime = previewEl.src.substring(5, previewEl.src.indexOf(';'));
+                let clean = previewEl.src.substring(previewEl.src.indexOf(',') + 1);
+                parts.push({ inlineData: { mimeType: mime, data: clean } });
+            }
+
+            const result = await window.callGeminiAPI('gemini-3.1-flash-image', parts, {
+                generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: "16:9" } }
+            });
+            const imageUrl = window.extractGeneratedImage(result);
+
+            if (imageUrl) {
+                const mImg = document.getElementById('locMasterSheetImg');
+                if (mImg) {
+                    mImg.src = imageUrl;
+                    mImg.classList.remove('hidden');
+                }
+                document.getElementById('locMasterSheetPlaceholder')?.classList.add('hidden');
+                document.getElementById('locSheetActionBtns')?.classList.remove('hidden');
+                window.showToast("Location Photorealistic Master Sheet dijana!");
+            } else {
+                throw new Error("NO_IMAGE_GENERATED");
+            }
+        } catch (e) {
+            let svgUrl = window.getFallbackSceneSvgDataUrl(1, name + " Master Sheet");
+            const mImg = document.getElementById('locMasterSheetImg');
+            if (mImg) {
+                mImg.src = svgUrl;
+                mImg.classList.remove('hidden');
+            }
+            document.getElementById('locMasterSheetPlaceholder')?.classList.add('hidden');
+            document.getElementById('locSheetActionBtns')?.classList.remove('hidden');
+            window.showToast(window.getFriendlyErrorMessage(e) + " Paparan fallback digunakan.", true);
+        } finally {
+            window.setGlobalLoading(false);
+        }
+    };
+
+    window.generateLocationImageForIndex = async function(idx) {
+        let l = projectState.locations[idx];
+        if (!l) return;
+        window.setGlobalLoading(true, "Generating Photorealistic Location Sheet");
+
+        let promptText = 'Strictly photorealistic 1080p HD live-action cinema film still of location named ' + l.name + ', description: ' + (l.description || 'Environment') + ', lighting: ' + (l.lighting || 'Natural') + '. Professional cinematography, real textures, completely empty uninhabited environment, ZERO humans, ZERO characters, zero illustration, zero cartoon.';
+
+        try {
+            let parts = [{ text: promptText }];
+            const result = await window.callGeminiAPI('gemini-3.1-flash-image', parts, {
+                generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: "16:9" } }
+            });
+            const imageUrl = window.extractGeneratedImage(result);
+
+            if (imageUrl) {
+                l.masterSheetImage = imageUrl;
+                window.showToast("Location Master Sheet berjaya dijana!");
+            } else {
+                throw new Error("NO_IMAGE_GENERATED");
+            }
+        } catch (e) {
+            l.masterSheetImage = window.getFallbackSceneSvgDataUrl(idx + 1, l.name + " Master Sheet");
+            window.showToast(window.getFriendlyErrorMessage(e) + " Paparan fallback digunakan.", true);
+        } finally {
+            window.setGlobalLoading(false);
+            window.renderAll();
+        }
+    };
+
+    window.downloadLocationSheetForIndex = function(idx) {
+        let l = projectState.locations[idx];
+        if (!l || !l.masterSheetImage) {
+            window.showToast("Tiada imej location sheet untuk dimuat turun.", true);
+            return;
+        }
+        const a = document.createElement('a');
+        a.href = l.masterSheetImage;
+        a.download = l.name + '_location_master_sheet.png';
+        a.click();
+        window.showToast("Dimuat turun!");
+    };
+
+    window.saveLocation = function() {
+        const editIdx = parseInt(document.getElementById('locEditIndex').value);
+        const locationId = document.getElementById('locIdField').value;
+        const name = document.getElementById('locName').value.trim() || "Lokasi";
+        const type = document.getElementById('locType').value.trim();
+        const description = document.getElementById('locDesc').value.trim();
+        const lighting = document.getElementById('locLighting').value.trim();
+        const mImg = document.getElementById('locMasterSheetImg');
+        const masterSheetImage = (mImg && mImg.src.startsWith('data:')) ? mImg.src : '';
+
+        const locObj = { locationId: locationId, name: name, type: type, description: description, lighting: lighting, masterSheetImage: masterSheetImage };
+        if (editIdx >= 0) projectState.locations[editIdx] = locObj;
+        else projectState.locations.push(locObj);
+
+        window.closeLocationModal();
+        window.renderAll();
+        window.showToast("Lokasi disimpan!");
+    };
+
+    window.deleteLocation = function(idx) {
+        window.customConfirm("Adakah anda pasti mahu memadam lokasi ini?", function() {
+            projectState.locations.splice(idx, 1);
+            window.renderAll();
+            window.showToast("Lokasi dipadam.");
+        });
+    };
+
+    window.generateStoryDirector = async function() {
+        const btn = document.getElementById('generateStoryBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i> <span id="generateStoryBtnText">STEP 6 — SYNCING 1:1 SCENE CARDS (Max 10s)...</span>';
+        }
+        window.setGlobalLoading(true, "Syncing Optimized 1:1 Scene Cards (Max 10s)");
+        
+        await new Promise(r => setTimeout(r, 500));
+
+        try {
+            projectState.storyboardData = {};
+            let reqs = (projectState.storyAnalysisData && projectState.storyAnalysisData.sceneRequirements) ? projectState.storyAnalysisData.sceneRequirements : [];
+            if (reqs.length === 0) {
+                reqs = [{ sceneId: "scene_01", storyBeatId: "beat_01", sceneNumber: 1, sceneTitle: "Babak 1", summary: projectState.logline || "Scene 1", visualDescription: "Cinematic", action: "Action", cameraDirection: "Wide shot", duration: "6s", generationSuitability: "READY", characterIds: ["CHAR-001"], outfitId: "OUTFIT-001", locationId: "LOC-001", dialogues: [] }];
+            }
+
+            reqs.forEach(function(req, index) {
+                let sceneNum = req.sceneNumber || (index + 1);
+                let sId = req.sceneId || ('scene_' + String(sceneNum).padStart(2, '0'));
+                let dRaw = parseInt(String(req.duration || '6s').replace('s', '').trim());
+                if (isNaN(dRaw) || dRaw > 10) dRaw = 8;
+
+                projectState.storyboardData[sId] = {
+                    sceneId: sId,
+                    storyBeatId: req.storyBeatId || ('beat_' + String(sceneNum).padStart(2, '0')),
+                    scene_number: sceneNum,
+                    duration: dRaw + 's',
+                    generationSuitability: req.generationSuitability || 'READY',
+                    title: req.sceneTitle || ("Babak " + sceneNum),
+                    summary: req.summary || "",
+                    visual: req.visualDescription || "",
+                    action: req.action || "",
+                    camera: req.cameraDirection || "",
+                    dialogues: req.dialogues || [],
+                    characterIds: req.characterIds || ["CHAR-001"],
+                    outfitId: req.outfitId || "OUTFIT-001",
+                    outfit2Id: req.outfit2Id || "",
+                    locationId: req.locationId || "LOC-001",
+                    image: "",
+                    imageStatus: "empty"
+                };
+            });
+
+            window.calculateTotalDurationAndScenes();
+            window.showToast("Berjaya! 1:1 Scene Cards diselaraskan (Max 10s).");
+        } catch (e) {
+            window.raffLog("Error Syncing Scenes:", e);
+            window.showToast("Ralat menyelaraskan scene.", true);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-layer-group text-sm"></i> <span id="generateStoryBtnText">STEP 6 — SYNC 1:1 SCENE CARDS & DIALOGUES (Max 10s)</span>';
+            }
+            window.setGlobalLoading(false);
+            window.renderAll();
+        }
+    };
+
+    window.openSceneEditor = function(sceneId) {
+        const scene = projectState.storyboardData[sceneId];
+        if (!scene) return;
+        document.getElementById('editSceneNumber').value = scene.scene_number;
+        document.getElementById('modalSceneNumTitle').innerText = "Scene " + String(scene.scene_number).padStart(2, '0');
+        document.getElementById('editSceneTitle').value = scene.title || '';
+        document.getElementById('editSceneDuration').value = scene.duration || '6s';
+        document.getElementById('editSceneVisual').value = scene.visual || '';
+        document.getElementById('editSceneAction').value = scene.action || '';
+        document.getElementById('editSceneCamera').value = scene.camera || '';
+
+        const char1Sel = document.getElementById('editSceneChar1Select');
+        const char2Sel = document.getElementById('editSceneChar2Select');
+        const outfit1Sel = document.getElementById('editSceneOutfit1Select');
+        const outfit2Sel = document.getElementById('editSceneOutfit2Select');
+        const locSel = document.getElementById('editSceneLocationSelect');
+
+        if (char1Sel && char2Sel) {
+            char1Sel.innerHTML = '<option value="">-- Pilih Karakter 1 --</option>';
+            char2Sel.innerHTML = '<option value="">-- Tiada Karakter 2 --</option>';
+            projectState.characters.forEach(function(c) {
+                char1Sel.innerHTML += '<option value="' + c.character_id + '">' + c.name + ' (' + c.character_id + ')</option>';
+                char2Sel.innerHTML += '<option value="' + c.character_id + '">' + c.name + ' (' + c.character_id + ')</option>';
+            });
+
+            let activeChars = scene.characterIds || ["CHAR-001"];
+            char1Sel.value = activeChars[0] || "";
+            char2Sel.value = activeChars[1] || "";
+        }
+
+        window.onSceneEditorCharChange(1);
+        window.onSceneEditorCharChange(2);
+
+        if (outfit1Sel) outfit1Sel.value = scene.outfitId || "";
+        if (outfit2Sel) outfit2Sel.value = scene.outfit2Id || "";
+
+        if (locSel) {
+            locSel.innerHTML = '';
+            projectState.locations.forEach(function(l) {
+                const opt = document.createElement('option');
+                opt.value = l.locationId;
+                opt.innerText = l.name + ' (' + l.locationId + ')';
+                if (scene.locationId === l.locationId) opt.selected = true;
+                locSel.appendChild(opt);
+            });
+        }
+
+        document.getElementById('sceneEditorModal')?.classList.remove('hidden');
+    };
+
+    window.onSceneEditorCharChange = function(charNum) {
+        const charSel = document.getElementById(charNum === 1 ? 'editSceneChar1Select' : 'editSceneChar2Select');
+        const outfitSel = document.getElementById(charNum === 1 ? 'editSceneOutfit1Select' : 'editSceneOutfit2Select');
+        if (!charSel || !outfitSel) return;
+
+        let charId = charSel.value;
+        outfitSel.innerHTML = '<option value="">-- Pilih Outfit Variant --</option>';
+        projectState.outfits.forEach(function(o) {
+            if (!charId || o.assignedCharId === charId || !o.assignedCharId) {
+                outfitSel.innerHTML += '<option value="' + o.outfitId + '">' + o.name + ' (' + o.outfitId + ')</option>';
+            }
+        });
+    };
+
+    window.closeSceneEditor = function() {
+        document.getElementById('sceneEditorModal')?.classList.add('hidden');
+    };
+
+    window.saveAndRegenerateSceneChanges = async function() {
+        const sceneNum = parseInt(document.getElementById('editSceneNumber').value);
+        const sceneId = 'scene_' + String(sceneNum).padStart(2, '0');
+        const scene = projectState.storyboardData[sceneId];
+        if (!scene) return;
+
+        scene.title = document.getElementById('editSceneTitle').value;
+        let dNum = parseInt(document.getElementById('editSceneDuration').value.replace('s', '').trim());
+        if (isNaN(dNum)) dNum = 6;
+        if (dNum > 10) dNum = 10;
+        scene.duration = dNum + 's';
+        scene.visual = document.getElementById('editSceneVisual').value;
+        scene.action = document.getElementById('editSceneAction').value;
+        scene.camera = document.getElementById('editSceneCamera').value;
+
+        let c1 = document.getElementById('editSceneChar1Select').value;
+        let c2 = document.getElementById('editSceneChar2Select').value;
+        scene.characterIds = [c1, c2].filter(Boolean);
+        scene.outfitId = document.getElementById('editSceneOutfit1Select').value;
+        scene.outfit2Id = document.getElementById('editSceneOutfit2Select').value;
+        scene.locationId = document.getElementById('editSceneLocationSelect').value;
+
+        window.closeSceneEditor();
+        window.renderAll();
+        window.showToast("Scene disimpan! Auto-regenerating specific frame...");
+
+        await window.generateSingleSceneImage(sceneId);
+    };
+
+    window.openJsonPromptModal = function(sceneId) {
+        const scene = projectState.storyboardData[sceneId];
+        if (!scene) return;
+
+        let activeCharIds = scene.characterIds || ["CHAR-001"];
+        let charObj1 = projectState.characters.find(function(c) { return c.character_id === activeCharIds[0]; });
+        let charObj2 = projectState.characters.find(function(c) { return c.character_id === activeCharIds[1]; });
+        let outfitObj1 = projectState.outfits.find(function(o) { return o.outfitId === scene.outfitId; });
+        let outfitObj2 = projectState.outfits.find(function(o) { return o.outfitId === scene.outfit2Id; });
+        let locObj = projectState.locations.find(function(l) { return l.locationId === scene.locationId; });
+
+        let charRefText = charObj1 ? (charObj1.name + " (" + charObj1.character_id + ") MASTER SHEET") : "CHARACTER MASTER SHEET";
+        if (charObj2) {
+            charRefText += " & " + charObj2.name + " (" + charObj2.character_id + ") MASTER SHEET";
+        }
+
+        let outfitRefText = outfitObj1 ? (outfitObj1.name + " (" + outfitObj1.outfitId + ") MASTER SHEET") : "SELECTED OUTFIT MASTER SHEET";
+        if (outfitObj2) {
+            outfitRefText += " & " + outfitObj2.name + " (" + outfitObj2.outfitId + ") MASTER SHEET";
+        }
+
+        let locRefText = locObj ? (locObj.name + " (" + locObj.locationId + ") LOCATION MASTER SHEET") : "LOCATION MASTER SHEET";
+
+        let sceneDialogues = scene.dialogues || projectState.dialogues.filter(function(d) { return d.sceneId === sceneId; });
+        let dialogueText = sceneDialogues.map(function(d) {
+            return (d.character || d.speakerId) + ": \"" + d.dialogue + "\"";
+        }).join(" | ");
+
+        let fullJsonPrompt = {
+            "scene_id": scene.sceneId || sceneId,
+            "duration": scene.duration || "8s",
+            "aspect_ratio": projectState.aspectRatio || "9:16",
+            "character_reference": charRefText,
+            "outfit_reference": outfitRefText,
+            "location_reference": locRefText,
+            "prompt": "Strictly photorealistic 1080p HD live-action cinema film still, single visual moment shot. " + (scene.visual || scene.summary || ""),
+            "action": scene.action || "",
+            "expression": "Natural realistic facial expression matching emotional delivery",
+            "camera": {
+                "shot": scene.camera || "Medium shot",
+                "angle": "Eye level",
+                "movement": "Subtle cinematic movement"
+            },
+            "lighting": locObj ? (locObj.lighting || "Cinematic natural lighting") : "Cinematic natural lighting",
+            "dialogue": dialogueText || "Tiada dialog",
+            "voice": {
+                "language": "Bahasa Melayu",
+                "tone": "natural, casual, conversational"
+            },
+            "sound": "Ambient cinematic soundscape",
+            "negative_prompt": "identity change, face change, different person, altered facial features, different hairstyle, different skin tone, age change, body proportion change, outfit change, redesigned clothing, wrong clothing color, missing clothing details, added clothing, removed clothing, wrong accessories, inconsistent character, inconsistent outfit, duplicate character, extra person, extra limbs, extra fingers, missing fingers, deformed hands, distorted face, unnatural body, warped anatomy, bad proportions, floating objects, object duplication, product deformation, background distortion, flickering, frame-to-frame inconsistency, sudden outfit change, sudden hairstyle change, unnatural movement, stiff movement, robotic motion, broken lip sync, unnatural facial expression, blurry face, low detail, low resolution, oversharpening, excessive motion blur, artificial skin, plastic skin, CGI look, cartoon look, anime look, unrealistic lighting, overexposure, underexposure, random text, subtitles, captions, watermark, logo, UI elements, borders, black bars"
+        };
+
+        document.getElementById('jsonPromptTextarea').value = JSON.stringify(fullJsonPrompt, null, 2);
+        document.getElementById('jsonPromptModal')?.classList.remove('hidden');
+    };
+    window.closeJsonPromptModal = function() {
+        document.getElementById('jsonPromptModal')?.classList.add('hidden');
+    };
+    window.copyJsonPromptModalContent = function() {
+        const ta = document.getElementById('jsonPromptTextarea');
+        if (ta) {
+            window.fallbackCopyText(ta.value);
+        }
+    };
+    window.fallbackCopyText = function(text) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            window.showToast("JSON disalin!");
+        } catch (e) {
+            window.showToast("Gagal salin.", true);
+        }
+        document.body.removeChild(textarea);
+    };
+
+    window.generateSingleSceneImage = async function(sceneId) {
+        const scene = projectState.storyboardData[sceneId];
+        if (!scene) return;
+        scene.imageStatus = 'generating';
+        window.renderAll();
+
+        let activeCharIds = scene.characterIds || ["CHAR-001"];
+        let charObj1 = projectState.characters.find(function(c) { return c.character_id === activeCharIds[0]; });
+        let charObj2 = projectState.characters.find(function(c) { return c.character_id === activeCharIds[1]; });
+
+        let outfitObj1 = projectState.outfits.find(function(o) { return o.outfitId === scene.outfitId; });
+        let outfitObj2 = projectState.outfits.find(function(o) { return o.outfitId === scene.outfit2Id; });
+        let locObj = projectState.locations.find(function(l) { return l.locationId === scene.locationId; });
+
+        let descParts = [];
+        if (charObj1) descParts.push("Character 1: " + charObj1.name + " wearing outfit " + (outfitObj1 ? outfitObj1.name : "default outfit"));
+        if (charObj2) descParts.push("Character 2: " + charObj2.name + " wearing outfit " + (outfitObj2 ? outfitObj2.name : "default outfit"));
+
+        let promptText = 'Strictly photorealistic 1080p HD live-action cinema film still, single visual moment shot. 100% STRICT REFERENCE LOCK: Preserve exact character facial identities, features, and hair from the provided character master sheets. Preserve exact clothing fabric, color, design, and pattern from the provided outfit master sheets for both Character 1 and Character 2. Preserve exact architecture, lighting, and environment from the provided location master sheet. DO NOT alter character faces, clothing, or location environment. ' + descParts.join(', ') + ' performing action inside location ' + (locObj ? locObj.name : 'cinematic location') + '. Scene title: ' + scene.title + '. Summary: ' + scene.summary + '. Visual beat: ' + scene.visual + '. Action: ' + scene.action + '. Camera: ' + scene.camera + '. Professional cinematography, 35mm film grain, real human actors, real environment texture, zero illustration, zero cartoon, zero animation.';
+
+        try {
+            let parts = [{ text: promptText }];
+            
+            if (charObj1 && charObj1.masterSheetImage && charObj1.masterSheetImage.startsWith('data:')) {
+                let mime = charObj1.masterSheetImage.substring(5, charObj1.masterSheetImage.indexOf(';'));
+                let clean = charObj1.masterSheetImage.substring(charObj1.masterSheetImage.indexOf(',') + 1);
+                parts.push({ inlineData: { mimeType: mime, data: clean } });
+            }
+            if (outfitObj1 && outfitObj1.masterSheetImage && outfitObj1.masterSheetImage.startsWith('data:')) {
+                let mime = outfitObj1.masterSheetImage.substring(5, outfitObj1.masterSheetImage.indexOf(';'));
+                let clean = outfitObj1.masterSheetImage.substring(outfitObj1.masterSheetImage.indexOf(',') + 1);
+                parts.push({ inlineData: { mimeType: mime, data: clean } });
+            }
+
+            if (charObj2 && charObj2.masterSheetImage && charObj2.masterSheetImage.startsWith('data:')) {
+                let mime = charObj2.masterSheetImage.substring(5, charObj2.masterSheetImage.indexOf(';'));
+                let clean = charObj2.masterSheetImage.substring(charObj2.masterSheetImage.indexOf(',') + 1);
+                parts.push({ inlineData: { mimeType: mime, data: clean } });
+            }
+            if (outfitObj2 && outfitObj2.masterSheetImage && outfitObj2.masterSheetImage.startsWith('data:')) {
+                let mime = outfitObj2.masterSheetImage.substring(5, outfitObj2.masterSheetImage.indexOf(';'));
+                let clean = outfitObj2.masterSheetImage.substring(outfitObj2.masterSheetImage.indexOf(',') + 1);
+                parts.push({ inlineData: { mimeType: mime, data: clean } });
+            }
+
+            if (locObj && locObj.masterSheetImage && locObj.masterSheetImage.startsWith('data:')) {
+                let mime = locObj.masterSheetImage.substring(5, locObj.masterSheetImage.indexOf(';'));
+                let clean = locObj.masterSheetImage.substring(locObj.masterSheetImage.indexOf(',') + 1);
+                parts.push({ inlineData: { mimeType: mime, data: clean } });
+            }
+
+            const result = await window.callGeminiAPI('gemini-3.1-flash-image', parts, {
+                generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: projectState.aspectRatio || "9:16" } }
+            });
+            const imageUrl = window.extractGeneratedImage(result);
+
+            if (imageUrl) {
+                scene.image = imageUrl;
+                scene.imageStatus = 'generated';
+                window.showToast("Scene frame berjaya dijana dengan Multi-Character & Outfit Consistency Lock!");
+            } else {
+                throw new Error("NO_IMAGE_GENERATED");
+            }
+        } catch (e) {
+            window.raffLog("Scene generation fallback triggered.", e);
+            scene.image = window.getFallbackSceneSvgDataUrl(scene.scene_number, scene.title);
+            scene.imageStatus = 'generated';
+            window.showToast(window.getFriendlyErrorMessage(e) + " Paparan fallback digunakan.", true);
+        } finally {
+            window.renderAll();
+        }
+    };
+
+    window.getFallbackSceneSvgDataUrl = function(sceneNum, title) {
+        const palettes = ['#1e1b4b', '#311026', '#062329', '#1e293b'];
+        let bg = palettes[(sceneNum - 1) % palettes.length];
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">' +
+            '<rect width="1080" height="1920" fill="' + bg + '"/>' +
+            '<circle cx="540" cy="960" r="300" fill="#4c1d95" opacity="0.4"/>' +
+            '<text x="540" y="940" fill="#ffffff" font-family="sans-serif" font-size="64" font-weight="bold" text-anchor="middle">SCENE ' + String(sceneNum).padStart(2, '0') + '</text>' +
+            '<text x="540" y="1020" fill="#c4b5fd" font-family="sans-serif" font-size="36" text-anchor="middle">' + (title || 'Visual Beat') + '</text>' +
+        '</svg>';
+        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    };
+
+    window.downloadSceneImage = function(sceneId) {
+        let scene = projectState.storyboardData[sceneId];
+        if (!scene || !scene.image) return;
+        const a = document.createElement('a');
+        a.href = scene.image;
+        a.download = 'scene_' + String(scene.scene_number).padStart(2, '0') + '.png';
+        a.click();
+        window.showToast("Dimuat turun!");
+    };
+
+    window.openCharacterFullScreen = function(idx) {
+        let c = projectState.characters[idx];
+        if (c && c.masterSheetImage) window.openFullScreenImage(c.masterSheetImage, c.name + ' Master Sheet');
+    };
+
+    window.openOutfitFullScreen = function(idx) {
+        let o = projectState.outfits[idx];
+        if (o && o.masterSheetImage) window.openFullScreenImage(o.masterSheetImage, o.name + ' Outfit Sheet');
+    };
+
+    window.openLocationFullScreen = function(idx) {
+        let l = projectState.locations[idx];
+        if (l && l.masterSheetImage) window.openFullScreenImage(l.masterSheetImage, l.name + ' Location Sheet');
+    };
+
+    window.openSceneFullScreen = function(sceneId) {
+        let sc = projectState.storyboardData[sceneId];
+        if (sc && sc.image) window.openFullScreenImage(sc.image, 'Scene ' + String(sc.scene_number).padStart(2, '0'));
+    };
+
+    window.openFullScreenImage = function(imgSrc, titleText) {
+        document.getElementById('fullScreenImg').src = imgSrc;
+        document.getElementById('fullScreenTitle').innerHTML = '<i class="fa-solid fa-image text-violet-400"></i> ' + titleText + ' (Fullscreen HD)';
+        document.getElementById('fullScreenDownloadBtn').href = imgSrc;
+        document.getElementById('fullScreenImageModal')?.classList.remove('hidden');
+    };
+    window.closeFullScreenImage = function() {
+        document.getElementById('fullScreenImageModal')?.classList.add('hidden');
+    };
+
+    window.downloadMasterSheetImage = function(targetType) {
+        let imgEl = null;
+        if (targetType === 'character') imgEl = document.getElementById('charMasterSheetImg');
+        else if (targetType === 'outfit') imgEl = document.getElementById('outfitMasterSheetImg');
+        else if (targetType === 'location') imgEl = document.getElementById('locMasterSheetImg');
+        if (!imgEl || !imgEl.src) return;
+        const a = document.createElement('a');
+        a.href = imgEl.src;
+        a.download = targetType + '_master_sheet.png';
+        a.click();
+        window.showToast("Master Sheet dimuat turun!");
+    };
+
+    window.openSettingsModal = function() {
+        document.getElementById('settingsApiKey').value = projectState.settings.apiKey;
+        document.getElementById('settingsModal')?.classList.remove('hidden');
+    };
+    window.closeSettingsModal = function() {
+        document.getElementById('settingsModal')?.classList.add('hidden');
+    };
+    window.saveSettings = function() {
+        projectState.settings.apiKey = document.getElementById('settingsApiKey').value.trim();
+        window.closeSettingsModal();
+        window.saveProjectToLocalStorage();
+        window.showToast("Tetapan disimpan!");
+    };
+
+    window.addEventListener('DOMContentLoaded', function() {
+        window.loadProjectFromLocalStorage();
+        if (!projectState.outfits) projectState.outfits = [];
+        if (!projectState.locations) projectState.locations = [];
+        if (!projectState.characters) projectState.characters = [];
+        if (!projectState.dialogues) projectState.dialogues = [];
+        if (!projectState.storyboardData) projectState.storyboardData = {};
+        if (!projectState.autoRecommend) projectState.autoRecommend = { characters: true, outfits: true, locations: true };
+        window.onOriginCatChange();
+        window.onModalOriginCatChange();
+        window.renderAll();
+    });
+</script>
+</body>
+</html>
